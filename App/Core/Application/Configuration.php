@@ -55,6 +55,11 @@ class Configuration
     public const LOG_LANGUAGE_ERRORS = true;
 
     /**
+     * The default language code for default lang file.
+     */
+    public const APP_LANG_DISPLAY = "en";
+
+    /**
      * The name of environment variable which stores encryption key for the application.
      */
     public const ENV_CRYPTOGRAPHY_KEY_NAME = "GUSI-FRAMEWORK-ENCRYPTION-KEY";
