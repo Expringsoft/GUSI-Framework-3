@@ -13,7 +13,7 @@ use App\Core\Server\Actions;
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="noindex" />
 	<title><?php echo Actions::printLocalized(Strings::INTERNAL_SERVER_ERROR) ?></title>
-	<link rel="stylesheet" href="<?php Actions::printCSS("core.css") ?>">
+	<link rel="stylesheet" href="<?php echo Actions::printCSS("core.css") ?>">
 </head>
 
 <body>
