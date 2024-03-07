@@ -33,6 +33,7 @@ ExpiresActive On
     RewriteCond %{REQUEST_FILENAME} -s [OR]
     RewriteCond %{REQUEST_FILENAME} -l [OR]
     RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^(?!(Resources\/)).*$ - [NC,L]
     RewriteRule ^(?!(Resources\/)).*$ index.php [NC,L]
 
     RewriteCond %{QUERY_STRING} !version=latest
