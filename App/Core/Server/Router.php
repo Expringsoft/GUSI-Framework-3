@@ -13,10 +13,7 @@ use InvalidArgumentException;
  */
 class Router extends SingletonInstance
 {
-	const CONTROLLER_CLASSNAME = 'Index';
-	protected $controllerkey = 0;
 	protected $baseUrl;
-	protected $controllerClassName;
 
 	protected $routes = array();
 
@@ -29,7 +26,6 @@ class Router extends SingletonInstance
 	 */
 	public function __construct()
 	{
-		$this->controllerClassName = self::CONTROLLER_CLASSNAME;
 		$this->setBaseUrl();
 		$this->createRequest();
 	}
@@ -77,7 +73,7 @@ class Router extends SingletonInstance
 		}
 		return $this;
 	}
-	
+
 	/**
 	 * Obtains the operating system from the user agent.
 	 *
@@ -195,7 +191,6 @@ class Router extends SingletonInstance
 			}
 
 			return $ip_address;
-
 		} catch (\Exception $e) {
 			return null;
 		}
@@ -220,17 +215,35 @@ class Router extends SingletonInstance
 		return $language;
 	}
 
+
+	/**
+	 * Returns the base URL of the server.
+	 *
+	 * @return string The base URL of the server.
+	 */
 	public function getBaseUrl()
 	{
 		return Configuration::LOCAL_ENVIRONMENT ? $_SERVER['SERVER_NAME'] . $this->baseUrl : $this->baseUrl;
 	}
 
+	/**
+	 * Sets the parameters for the request.
+	 * 
+	 * @param array $params The parameters.
+	 * 
+	 * @return $this
+	 */
 	public function setParameters($params)
 	{
 		$this->parameters = $params;
 		return $this;
 	}
 
+	/**
+	 * Returns the parameters for the request.
+	 * 
+	 * @return array The parameters.
+	 */
 	public function getParameters()
 	{
 		if ($this->parameters == null) {
@@ -239,6 +252,11 @@ class Router extends SingletonInstance
 		return $this->parameters;
 	}
 
+	/**
+	 * Returns the full path of the request.
+	 * 
+	 * @return string Full request path.
+	 */
 	public function getFormattedPathSegments()
 	{
 		$params = $this->getParameters();
@@ -256,25 +274,14 @@ class Router extends SingletonInstance
 		}
 	}
 
+	/**
+	 * Returns the controller class name which is the first segment of the request URI.
+	 * 
+	 * @return string The controller class name.
+	 */
 	public function getControllerClassName()
 	{
-		return $this->controllerClassName;
-	}
-
-	/**
-	 * Obtiene valores de $_GET o $_POST. $_POST sobrescribe parámetros iguales de $_GET
-	 * 
-	 * @param type $name
-	 * @param type $default
-	 * @param type $filter
-	 * @return type 
-	 */
-	public function getParam($name, $default = null)
-	{
-		if (isset($this->parameters[$name])) {
-			return $this->parameters[$name];
-		}
-		return $default;
+		return $this->parameters['PATH_SEGMENTS'][0];
 	}
 
 	/**
@@ -288,12 +295,6 @@ class Router extends SingletonInstance
 			return '';
 		}
 		$uri = $_SERVER['REQUEST_URI'];
-
-		/* 
-		The following fix solves a bug where slashes "/" were being completely removed,
-		causing getFormattedPathSegments() to always be "", and getControllerClassName()
-		to return the entire URL without any separator slashes.
-		*/
 		// TODO: Improve this temporary code to avoid situations of // or //// or more
 		// at the beginning and end of the URL.
 		if (strpos($uri, '/') === 0) {
@@ -305,34 +306,43 @@ class Router extends SingletonInstance
 		return $uri;
 	}
 
+	/**
+	 * Create a request object.
+	 * 
+	 * @return $this
+	 */
 	public function createRequest()
 	{
+		// Store request Uri
 		$uri = $this->getRequestUri();
-		$uriParts = explode('/', $uri);
-		if (!isset($uriParts[$this->controllerkey])) {
-			return $this;
+		// Since all request starts with / this will be the initial item.
+		$uriParts = ["/"];
+		// Split the URI into parts
+		$uriPath = explode('/', $uri);
+		// By splitting the URI by / we lost the first part / at the beginning of the request URI
+		// which is the root path. If first part of path is "" it means we have
+		// a request that is NOT the root path, so we add it to the array.
+		if ($uriPath[0] != "") {
+			$uriParts = array_merge($uriParts, $uriPath);
 		}
-		$this->controllerClassName = $this->formatControllerName(explode("?", $uriParts[$this->controllerkey])[0]);
 
-		unset($uriParts[$this->controllerkey]);
-
-		// Obtener los datos recibidos via JSON, por ejemplo en solicitudes fetch que sean POST
+		// Get data received via JSON, for example in fetch requests that are POST
 		$jsonData = json_decode(file_get_contents("php://input"), true);
 
-		// Si no hay datos JSON entonces crea un arreglo vacío
+		// If there is no JSON data then create an empty array
 		if (!is_array($jsonData)) {
 			$jsonData = [];
 		}
 
-		// Si no hay datos POST entonces crea un arreglo vacío
+		// If there is no POST data then create an empty array
 		if (!is_array($_POST)) {
 			$_POST = [];
 		}
 
-		// Almacenar los datos recibidos via JSON y via POST
+		// Store the data received via JSON and the data received via POST
 		$this->parameters['POST'] = array_merge($_POST, $jsonData);
 
-		// Obtener y procesar la cadena de consulta
+		// If there is a query param we added it to GET parameters array
 		$queryString = parse_url($uri, PHP_URL_QUERY);
 		if ($queryString) {
 			parse_str($queryString, $queryParams);
@@ -341,22 +351,14 @@ class Router extends SingletonInstance
 			}
 		}
 
-		// Almacenar las partes de la URL sin las cadenas de consulta
+		// Store URI Path segments without query params
 		$this->parameters['PATH_SEGMENTS'] = [];
 		foreach ($uriParts as $part) {
-			$value = explode('?', $part)[0]; // Obtener solo el valor antes de '?'
+			$value = explode('?', $part)[0]; // To get value before '?'
 			$this->parameters['PATH_SEGMENTS'][] = $value;
 		}
 
 		return $this;
-	}
-
-	/**
-	 * return URL in lowercase
-	 */
-	protected function formatControllerName($unformatted)
-	{
-		return strtolower($unformatted);
 	}
 
 	/**
@@ -366,18 +368,46 @@ class Router extends SingletonInstance
 	 */
 	public function handleRequest()
 	{
-		$requestedRoute = $_SERVER['REQUEST_URI'];
+		// Get the requested URI
+		$requestedRoute = $this->getRequestUri();
 
-		if (isset($this->routes[$requestedRoute])) {
-			Logger::LogDebug(self::class, "Route '{$requestedRoute}' found.");
-			$controllerName = $this->routes[$requestedRoute][0];
-			$methodName = $this->routes[$requestedRoute][1];
+		// Iterate through Module-defined routes
+		foreach ($this->routes as $route => $controllerAndMethod) {
+			// Similar to the requested route, we split Module-defined paths by /
+			// to compare each segment with the requested route segments
+			$routeParts = explode('/', $route);
+			// The first part of the route is always /
+			$routeParts[0] = "/";
+			// If the route is /, we set the route segments to / to avoid an empty array
+			// otherwise we set the route segments to the route parts
+			$routeSegments = $route === "/" ? ["/"] : $routeParts;
 
-			$controller = new $controllerName();
-			//$controller->$methodName();
-		} else {
-			Logger::LogDebug(self::class, "Route '{$requestedRoute}' not found.");
-			Actions::renderNotFound();
+			// If the number of segments in the requested route does not match the number of segments in the route, we continue to the next route
+			if (count($routeSegments) != count($this->parameters['PATH_SEGMENTS'])) {
+				continue;
+			}
+
+			// We initialize the parameters array
+			$parameters = [];
+			// We iterate through the route segments
+			for ($i = 0; $i < count($routeSegments); $i++) {
+				// If the route segment is a parameter defined by param name enclosed with {}, we add it to the parameters array
+				if ($routeSegments[$i][0] == '{' && $routeSegments[$i][-1] == '}') {
+					$parameters[trim($routeSegments[$i], '{}')] = $this->parameters['PATH_SEGMENTS'][$i];
+				} elseif ($routeSegments[$i] != $this->parameters['PATH_SEGMENTS'][$i]) {
+					// If the route segment does not match the requested route segment, we continue to the next route
+					continue 2;
+				}
+			}
+
+			// If we reach this point, it means that the route matches the requested route
+			// so we create a new instance of the controller and call the method
+			// with the parameters array, 0 is the controller class and 1 is the method.
+			$controller = new $controllerAndMethod[0]($controllerAndMethod[1], $parameters);
+			return;
 		}
+
+		// If no route matches the requested route, we render a 404 page
+		Actions::renderNotFound();
 	}
 }
