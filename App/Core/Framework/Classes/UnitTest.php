@@ -132,7 +132,7 @@ class UnitTest
 	 * Runs a test with the given name and test function.
 	 *
 	 * @param string $name The name of the test.
-	 * @param callable UnitTest $test The test function.
+	 * @param callable $test UnitTest instance.
 	 */
 	public function test(string $name, callable $test): void
 	{
