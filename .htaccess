@@ -27,7 +27,6 @@ AddOutputFilterByType DEFLATE text/xml
 
 Options -Indexes
 RewriteEngine On
-ExpiresActive On
 
 <IfModule mod_rewrite.c>
     RewriteCond %{REQUEST_FILENAME} -s [OR]
