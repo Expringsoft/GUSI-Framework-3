@@ -2,6 +2,7 @@
 
 namespace App\Core\Application;
 
+use App\Core\Exceptions\SecurityException;
 use App\Core\Server\Actions;
 use App\Core\Server\Logger;
 use App\Core\Server\Router;
@@ -16,7 +17,9 @@ class App
 	/**
 	 * Constructs a new instance of the App class.
 	 * Initializes the session, sets headers, error reporting, and exception handler.
-	 * Calls the init method to load modules and handle the request.
+	 * Initializes the application by calling the init() method.
+	 * 
+	 * @throws SecurityException If the application requires HTTPS and is not running on local environment and the current context is not secure.
 	 */
 	public function __construct()
 	{
@@ -25,6 +28,10 @@ class App
 		header('Server: CustomApache');
 		error_reporting(Configuration::DEBUG_ENABLED ? E_ALL : 0);
 		set_exception_handler(array($this, 'AppExceptionHandler'));
+		// If the application requires HTTPS, is not running on local environment and the current context is not secure, throw a SecurityException.
+		if (Configuration::APP_ONLY_OVER_HTTPS && !Configuration::LOCAL_ENVIRONMENT && !Router::getInstance()->isContextSecure()) {
+			throw new SecurityException("This application requires HTTPS.");
+		}
 		$this->init();
 	}
 
