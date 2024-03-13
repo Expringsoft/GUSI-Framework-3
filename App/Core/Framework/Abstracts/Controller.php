@@ -11,17 +11,16 @@ use App\Core\Framework\Abstracts\Channel;
 use App\Core\Server\Logger;
 use InvalidArgumentException;
 use PDOException;
-use Random\RandomException;
 abstract class Controller extends Channel implements Controllable
 {
 	private $View;
 	private $Params;
 
-	public function __construct()
+	public function __construct(string $Method = 'Main', $args = [])
 	{
 		$RenderOption = RenderOptions::DEFAULT;
 		try {
-			$this->Main();
+			$this->$Method(...$args);
 		} catch (\Throwable $th) {
 			$RenderOption = RenderOptions::ERROR;
 			$Message = $th->getMessage() . ".\nStack:\n" . $th->getTraceAsString() . ".\n■ Line: " . $th->getLine() . ', on: ' . $th->getFile();
@@ -39,7 +38,7 @@ abstract class Controller extends Channel implements Controllable
 		}
 	}
 
-	public abstract function Main();
+	public abstract function Main(...$args);
 
 	public function setView($_ViewURL = null, ?array $_Params = null)
 	{
