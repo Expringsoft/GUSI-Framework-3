@@ -31,6 +31,16 @@ class Router extends SingletonInstance
 	}
 
 	/**
+	 * Checks if the context is secure (running over https).
+	 *
+	 * @return bool True if the context is secure, false otherwise.
+	 */
+	public static function isContextSecure(): bool
+	{
+		return isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1');
+	}
+
+	/**
 	 * Adds a route to the router.
 	 * 
 	 * @param string $route The route.
