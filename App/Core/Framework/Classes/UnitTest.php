@@ -16,7 +16,7 @@ class UnitTest
 	/**
 	 * The folder where the test files are located.
 	 */
-	private const TESTS_FOLDER = 'App/Tests/';
+	private const TESTS_FOLDER = 'App/Tests/Results/';
 
 	/**
 	 * The extension for the test files.
