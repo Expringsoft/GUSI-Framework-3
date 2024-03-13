@@ -1,0 +1,11 @@
+# Ignore .log debug files in App/Logs/Debug
+App/Logs/Debug/*.log
+
+# Ignore .log warning files in App/Logs/Warnings
+App/Logs/Warnings/*.log
+
+# Ignore .log error files in App/Logs/Errors
+App/Logs/Errors/*.log
+
+# Ignore .json test results files in App/Tests/Results
+App/Tests/Results/*.json
