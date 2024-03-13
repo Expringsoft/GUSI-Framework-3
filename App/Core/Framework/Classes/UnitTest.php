@@ -81,7 +81,9 @@ class UnitTest
 		if (!Configuration::LOCAL_ENVIRONMENT && !Configuration::ALLOW_TESTING_OUTSIDE_LOCAL) {
 			throw new \Exception('Unit tests can only be run in local environment');
 		}
-		$this->filenameEnd = SharedConsts::UNDERSCORE .  date('Y-m-d') . SharedConsts::UNDERSCORE . time() . self::TESTS_EXTENSION;
+		
+		$this->filenameEnd = SharedConsts::UNDERSCORE .  date('Y-m-d') . SharedConsts::UNDERSCORE . time() . rand(1000,99999) . self::TESTS_EXTENSION;
+
 		if ($testName) {
 			$this->testName = $testName;
 			$this->testFile = $testName . $this->filenameEnd;
