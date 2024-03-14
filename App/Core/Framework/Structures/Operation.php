@@ -32,7 +32,7 @@ class Operation
 	 * @param string $message The message associated with the operation.
 	 * @param array $data The data associated with the operation.
 	 */
-	public function __construct(bool $result, string $message, array $data)
+	public function __construct(bool $result, string $message, array $data = [])
 	{
 		$this->result = $result;
 		$this->message = $message;
