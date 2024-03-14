@@ -17,6 +17,7 @@ class SampleAPI extends Api{
 			return;
 		}
 		if ($args["version"] != "v1") {
+			http_response_code(SharedConsts::HTTP_RESPONSE_BAD_REQUEST);
 			$this->buildResponse(new APIResponse(SharedConsts::HTTP_RESPONSE_BAD_REQUEST, "Invalid version"));
 			return;
 		}
