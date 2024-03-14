@@ -17,7 +17,7 @@ class Router extends SingletonInstance
 
 	protected $routes = array();
 
-	protected $parameters = ['GET' => array(), 'POST' => array(), 'FETCH' => array(), 'PATH_SEGMENTS' => array()];
+	protected $parameters = ['GET' => array(), 'POST' => array(), 'PATH_SEGMENTS' => array()];
 
 	/**
 	 * Router constructor.
