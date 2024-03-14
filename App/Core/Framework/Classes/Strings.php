@@ -2,6 +2,7 @@
 namespace App\Core\Framework\Classes;
 
 class Strings{
+	public const API_UNHANDLED_EXCEPTION = 'API_UNHANDLED_EXCEPTION';
 	public const APP_NAME = 'APP_NAME';
 	public const APP_DESCRIPTION = 'APP_DESCRIPTION';
 	public const APP_DESCRIPTION_NO_NAME = 'APP_DESCRIPTION_NO_NAME';

@@ -2,56 +2,74 @@
 
 namespace App\Core\Framework\Abstracts;
 
+use App\Core\Application\Configuration;
 use App\Core\Server\Router;
 use App\Core\Application\SharedConsts;
+use App\Core\Framework\Classes\Strings;
+use App\Core\Framework\Enumerables\RequestMethods;
+use App\Core\Framework\Structures\APIResponse;
+use App\Core\Server\Actions;
+use App\Core\Server\Logger;
+use PDOException;
 
 abstract class Api
 {
-	public $Version;
-	public $MinVersion;
-	public $Request;
+	public $Response;
 
-	public $Response = ['code' => SharedConsts::HTTP_RESPONSE_OK, 'msg' => "Success", 'data' => array()];
-
-	public function __construct($Version = "1.0", $MinVersion = "1.0", $CacheAge = "120")
+	public function __construct($Method = "Main", $args = [])
 	{
-		header('Content-Type: application/json');
-		header('Cache-Control: max-age=' . $CacheAge . ', must-revalidate');
-		header('API-Version: ' . $Version);
-		header('API-MinVersion: ' . $MinVersion);
+		$this->setHeader("Content-Type", "application/json; charset=UTF-8");
+		$this->setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+		$this->setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+		$this->setHeader("Access-Control-Max-Age", "600");
 
-		$RequestInit = new Router();
-		$this->Request = $RequestInit->createRequest();
-
-		$this->Version = $Version;
-		$this->MinVersion = $MinVersion;
-
-		$this->Main();
-		$this->printResponse();
+		try {
+			$this->$Method(...$args);
+		} catch (\Throwable $th) {
+			if (Configuration::LOG_ERRORS) {
+				$Message = $th->getMessage() . ".\nStack:\n" . $th->getTraceAsString() . ".\n■ Line: " . $th->getLine() . ', on: ' . $th->getFile();
+				$thCode = null;
+				if ($th instanceof PDOException) {
+					$thCode = $th->errorInfo[1];
+				} else {
+					$thCode = $th->getCode();
+				}
+				Logger::LogError(self::class, "[{$thCode}]: {$Message}");
+			}
+			http_response_code(500);
+			$this->buildResponse(new APIResponse(SharedConsts::HTTP_RESPONSE_INTERNAL_SERVER_ERROR, Actions::printLocalized(Strings::API_UNHANDLED_EXCEPTION)));
+		} finally {
+			$this->printResponse();
+		}
 	}
 
-	abstract public function Main();
+	abstract public function Main(...$args);
 
-	public function buildResponse($Code, $Message, ?array $Data = null)
+	abstract public static function getParentModule();
+
+	public function setHeader($name, $value)
 	{
-		$this->Response['code'] = $Code;
-		$this->Response['msg'] = $Message;
-		$this->Response['data'] = $Data;
+		header($name . ': ' . $value);
+	}
+
+	public function buildResponse(APIResponse $Response)
+	{
+		$this->Response = $Response;
 	}
 
 	public function printResponse()
 	{
-		echo json_encode($this->Response);
+		echo $this->Response->__toJSON();
 	}
 
-	public function isRequestMethodAllowed($Needed)
+	public function isRequestMethodAllowed(RequestMethods $Needed)
 	{
-		return $_SERVER['REQUEST_METHOD'] == $Needed;
+		return $_SERVER['REQUEST_METHOD'] == $Needed->value;
 	}
 
 	public function hasGETParameters(array $Keys)
 	{
-		$GetParams = $this->Request->getParameters()['GET'];
+		$GetParams = Router::getInstance()->getParameters()['GET'];
 		foreach ($Keys as $Key) {
 			if (!isset($GetParams[$Key])) {
 				return false;
@@ -62,21 +80,12 @@ abstract class Api
 
 	public function hasPOSTParameters(array $Keys)
 	{
-		$PostParams = $this->Request->getParameters()['POST'];
+		$PostParams = Router::getInstance()->getParameters()['POST'];
 		foreach ($Keys as $Key) {
 			if (!isset($PostParams[$Key])) {
 				return false;
 			}
 		}
 		return true;
-	}
-
-	public function getValueDescriptor($Key, array $ArrayAssoc)
-	{
-		if (isset($ArrayAssoc[$Key])) {
-			return $ArrayAssoc[$Key];
-		} else {
-			return false;
-		}
 	}
 }
