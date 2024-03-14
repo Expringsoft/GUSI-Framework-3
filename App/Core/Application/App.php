@@ -2,11 +2,13 @@
 
 namespace App\Core\Application;
 
+use App\Core\Exceptions\APIException;
 use App\Core\Exceptions\SecurityException;
 use App\Core\Server\Actions;
 use App\Core\Server\Logger;
 use App\Core\Server\Router;
 use App\Core\Server\Session;
+use App\Modules\Index\APIs_Module;
 use App\Modules\Index\Index_Module;
 
 /**
@@ -28,6 +30,7 @@ class App
 		header('Server: CustomApache');
 		error_reporting(Configuration::DEBUG_ENABLED ? E_ALL : 0);
 		set_exception_handler(array($this, 'AppExceptionHandler'));
+		set_error_handler(array($this, 'AppErrorHandler'));
 		// If the application requires HTTPS, is not running on local environment and the current context is not secure, throw a SecurityException.
 		if (Configuration::APP_ONLY_OVER_HTTPS && !Configuration::LOCAL_ENVIRONMENT && !Router::getInstance()->isContextSecure()) {
 			throw new SecurityException("This application requires HTTPS.");
@@ -50,6 +53,7 @@ class App
 	private function loadModules()
 	{
 		Index_Module::registerRoutes();
+		APIs_Module::registerRoutes();
 	}
 
 	/**
@@ -72,15 +76,41 @@ class App
 
 			Logger::LogError("AppExceptionHandler", $exceptionData);
 		}
-
-		if (Configuration::DEBUG_ENABLED) {
-			echo "<pre>";
-			echo "Exception occurred: " . $exception->getMessage() . "<br>";
-			echo "File: " . $exception->getFile() . "<br>";
-			echo "Line: " . $exception->getLine() . "<br>";
-			echo "Trace: " . $exception->getTraceAsString() . "<br>";
-			echo "</pre>";
+		if ($exception instanceof APIException) {
+			Actions::clearOutputBuffer();
+			echo Actions::printLocalized("API_UNHANDLED_ERROR");
+		} else {
+			Actions::renderError();
 		}
-		Actions::renderError();
+	}
+
+
+	/**
+	 * Handles application fatal errors and warnings.
+	 * Logs the error if AUTOLOG_ERRORS is enabled.
+	 * Renders the error page using Actions::renderError().
+	 * If is not possible to render the error page, clears the output buffer and sets the response code to 500.
+	 * Finally, terminates the script.
+	 *
+	 * @param int $errorNumber The error number.
+	 * @param string $errorMessage The error message.
+	 * @param string $errorFile The file where the error occurred.
+	 * @param int $errorLine The line number where the error occurred.
+	 * @return void
+	 */
+	public function AppErrorHandler($errorNumber, $errorMessage, $errorFile, $errorLine)
+	{
+		if (Configuration::AUTOLOG_ERRORS) {
+			$errorData = "Error: $errorNumber\nMessage: $errorMessage\nFile: $errorFile\nLine: $errorLine";
+			Logger::LogError("AppErrorHandler", $errorData);
+		}
+		try {
+			Actions::renderError();
+		} catch (\Throwable $th) {
+			Actions::clearOutputBuffer();
+			http_response_code(500);
+		} finally {
+			die();
+		}
 	}
 }

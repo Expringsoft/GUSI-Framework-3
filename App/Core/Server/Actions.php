@@ -81,20 +81,23 @@ class Actions
 
 	public static function renderNotFound()
 	{
-		if (ob_get_level() > 0) {
-			ob_end_clean();
-		}
+		self::clearOutputBuffer();
 		http_response_code(404);
 		self::requireView(SharedConsts::PATH_VIEW_NOT_FOUND);
 	}
 
 	public static function renderError(int $code = 500)
 	{
+		self::clearOutputBuffer();
+		http_response_code($code);
+		self::requireView(SharedConsts::PATH_VIEW_ERROR);
+	}
+
+	public static function clearOutputBuffer()
+	{
 		if (ob_get_level() > 0) {
 			ob_end_clean();
 		}
-		http_response_code($code);
-		self::requireView(SharedConsts::PATH_VIEW_ERROR);
 	}
 
 	public static function getRootURL()

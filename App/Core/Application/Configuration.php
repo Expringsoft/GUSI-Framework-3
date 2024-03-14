@@ -62,6 +62,11 @@ class Configuration
     public const AUTOLOG_EXCEPTIONS = true;
 
     /**
+     * Automatically log exceptions.
+     */
+    public const AUTOLOG_ERRORS = true;
+
+    /**
      * Log errors.
      */
     public const LOG_ERRORS = true;
