@@ -1,4 +1,5 @@
 {
+  "API_UNHANDLED_EXCEPTION": "No se puede procesar la solicitud debido a una excepción no controlada.",
   "APP_DESCRIPTION": "GUSI Framework | App description.",
   "APP_DESCRIPTION_NO_NAME": "App description.",
   "APP_INTERNAL_SERVER_ERROR_EXPLAIN": "La operación solicitada no se pudo completar, es posible que la página esté en mantenimiento o haya ocurrido una falla en algún servicio. Si este error persiste, comuníquese con el soporte.",

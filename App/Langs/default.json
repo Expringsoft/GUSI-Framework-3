@@ -1,4 +1,5 @@
 {
+  "API_UNHANDLED_EXCEPTION": "Unable to process request due to an unhandled exception.",
   "APP_DESCRIPTION": "GUSI Framework | App description.",
   "APP_DESCRIPTION_NO_NAME": "App description.",
   "APP_INTERNAL_SERVER_ERROR_EXPLAIN": "The requested operation could not be completed, it is possible that the page is under maintenance or a failure has occurred with a service. If this error persists, contact support.",
