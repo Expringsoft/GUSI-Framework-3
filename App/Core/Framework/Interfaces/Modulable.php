@@ -6,7 +6,4 @@ interface Modulable{
 	public static function registerRoutes();
 
 	public static function getFallback();
-	
-	public static function getChannel();
-
 }

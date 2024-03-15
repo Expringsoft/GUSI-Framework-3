@@ -2,17 +2,21 @@
 namespace App\Core\Framework\Abstracts;
 
 use App\Core\Framework\Enumerables\Channels;
+use App\Core\Framework\Interfaces\Channelable;
 
-abstract class Channel
+abstract class Channel implements Channelable
 {
-	private Channels $channel;
+	protected static $channels = [];
 
-	private function setChannel(Channels $Channel): void
+	public static function getChannel(): Channels
 	{
-		$this->channel = $Channel;
+		$class = static::class;
+		return self::$channels[$class] ?? Channels::DEV;
 	}
-	
-	public function getChannel(): Channels{
-		return $this->channel;
+
+	public static function setChannel(Channels $channel)
+	{
+		$class = static::class;
+		self::$channels[$class] = $channel;
 	}
 }

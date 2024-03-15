@@ -3,7 +3,7 @@
 namespace App\Core\Framework\Abstracts;
 
 use App\Core\Application\Configuration;
-use App\Core\Exceptions\AppException;
+use App\Core\Framework\Enumerables\Channels;
 use App\Core\Server\Actions;
 use App\Core\Framework\Enumerables\RenderOptions;
 use App\Core\Framework\Interfaces\Controllable;
@@ -37,6 +37,10 @@ abstract class Controller extends Channel implements Controllable
 			$this->renderView($RenderOption);
 		}
 	}
+
+	abstract static function getParentModule(): string;
+
+	abstract static function getModuleChannel(): Channels;
 
 	public abstract function Main(...$args);
 

@@ -6,13 +6,15 @@ use App\Core\Application\Configuration;
 use App\Core\Server\Router;
 use App\Core\Application\SharedConsts;
 use App\Core\Framework\Classes\Strings;
+use App\Core\Framework\Enumerables\Channels;
 use App\Core\Framework\Enumerables\RequestMethods;
+use App\Core\Framework\Interfaces\Channelable;
 use App\Core\Framework\Structures\APIResponse;
 use App\Core\Server\Actions;
 use App\Core\Server\Logger;
 use PDOException;
 
-abstract class Api
+abstract class Api extends Channel
 {
 	public $Response;
 
