@@ -43,7 +43,6 @@ spl_autoload_register(function ($class) {
 });
 
 use App\Core\Application\App;
-use App\Core\Exceptions\AppException;
 use App\Core\Server\Actions;
 use App\Core\Server\Logger;
 
@@ -55,7 +54,7 @@ use App\Core\Server\Logger;
 try {
     new App();
 } catch (\Throwable $th) {
-    Logger::LogError("App", $th->getMessage() . ' - ' . $th->getTraceAsString(), $th->getCode(), $th->getPrevious());
+    Logger::LogError("App Launcher", $th->getMessage() . "\n" . $th->getTraceAsString(), $th->getCode(), $th->getPrevious());
     Actions::renderError(500);
     die();
 }
