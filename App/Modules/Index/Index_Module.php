@@ -1,10 +1,8 @@
 <?php
 namespace App\Modules\Index;
 
-use App\Controllers\Index\Dashboard;
 use App\Controllers\Index\Home;
 use App\Core\Server\Router;
-use App\Core\Server\Logger;
 use App\Core\Framework\Abstracts\Module;
 
 class Index_Module extends Module
