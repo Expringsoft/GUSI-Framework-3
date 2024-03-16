@@ -29,8 +29,8 @@ class App
 		header('x-powered-by: GUSIFramework');
 		header('Server: CustomApache');
 		error_reporting(Configuration::DEBUG_ENABLED ? E_ALL : 0);
-		set_exception_handler(array($this, 'AppExceptionHandler'));
 		set_error_handler(array($this, 'AppErrorHandler'));
+		set_exception_handler(array($this, 'AppExceptionHandler'));
 		// If the application requires HTTPS, is not running on local environment and the current context is not secure, throw a SecurityException.
 		if (Configuration::APP_ONLY_OVER_HTTPS && !Configuration::LOCAL_ENVIRONMENT && !Router::getInstance()->isContextSecure()) {
 			throw new SecurityException("This application requires HTTPS.");
