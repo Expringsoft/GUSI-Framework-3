@@ -49,6 +49,8 @@ abstract class Api extends Channel
 
 	abstract public static function getParentModule();
 
+	abstract public static function getModuleChannel(): Channels;
+
 	public function setHeader($name, $value)
 	{
 		header($name . ': ' . $value);
