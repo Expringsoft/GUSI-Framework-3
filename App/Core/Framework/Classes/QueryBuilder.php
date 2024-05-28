@@ -5,6 +5,8 @@ namespace App\Core\Framework\Classes;
 use App\Core\Framework\Enumerables\QueryTypes;
 use App\Core\Framework\Structures\DatabaseResult;
 use App\Core\Server\Database\Database;
+use BadFunctionCallException;
+use LogicException;
 
 /**
  * Class QueryBuilder
@@ -16,6 +18,7 @@ class QueryBuilder
 	private $queryParts = [];
 	private $params = [];
 	private $queryType;
+	private $ignoreFrom = false;
 
 	public const LIKE_ENDS_WITH = "%@"; // Starts with
 	public const LIKE_STARTS_WITH = "@%"; // Ends with
@@ -27,6 +30,14 @@ class QueryBuilder
 	 * Initializes the query parts and parameters.
 	 */
 	public function __construct()
+	{
+		$this->setDefaults();
+	}
+
+	/**
+	 * Sets the default values for the query parts and parameters.
+	 */
+	public function setDefaults()
 	{
 		$this->queryParts = [
 			'select' => '',
@@ -43,6 +54,8 @@ class QueryBuilder
 			'delete' => '',
 		];
 		$this->params = [];
+		$this->queryType = null;
+		$this->ignoreFrom = false;
 	}
 
 	/**
@@ -102,10 +115,11 @@ class QueryBuilder
 	 * @param string $table The name of the table to delete from.
 	 * @return $this The QueryBuilder instance.
 	 */
-	public function delete(string $table)
+	public function delete(string $table, bool $ignoreFrom = false)
 	{
 		$this->queryType = QueryTypes::DELETE;
 		$this->queryParts['delete'] = "DELETE FROM $table";
+		$this->ignoreFrom = $ignoreFrom;
 		return $this;
 	}
 
@@ -248,21 +262,31 @@ class QueryBuilder
 	public function execute(): DatabaseResult
 	{
 		$database = Database::DB();
-		$query = $this->getQuery();
+		$result = null;
+		
 		switch ($this->queryType) {
 			case QueryTypes::SELECT:
-				return $database->select($query, $this->params);
+				$result = $database->select($this->getQuery(), $this->getParams());
 				break;
 			case QueryTypes::INSERT:
-				return $database->insert($query, $this->params);
+				$result = $database->insert($this->getQuery(), $this->getParams());
 				break;
 			case QueryTypes::UPDATE:
-				return $database->update($query, $this->params);
+				$result = $database->update($this->getQuery(), $this->getParams());
 				break;
 			case QueryTypes::DELETE:
-				return $database->delete($query, $this->params);
+				if (!$this->ignoreFrom && count($this->queryParts['where']) == 0) {
+					throw new LogicException("DELETE query without WHERE clause is not allowed unless explicitly ignored.");
+				}
+				$result = $database->delete($this->getQuery(), $this->getParams());
+				break;
+			default:
+				throw new BadFunctionCallException("Unsupported query type");
 				break;
 		}
+
+		$this->setDefaults();
+		return $result;
 	}
 
 	/**

@@ -57,6 +57,16 @@ class Configuration
     public const APP_ONLY_OVER_HTTPS = true;
 
     /**
+     * The default timezone for the application.
+     */
+    public const DEFAULT_TIMEZONE = "UTC";
+
+    /**
+     * Prevents setting model properties if they are not defined in the model.
+     */
+    public const STRICT_MODELS = true;
+
+    /**
      * Automatically log exceptions.
      */
     public const AUTOLOG_EXCEPTIONS = true;

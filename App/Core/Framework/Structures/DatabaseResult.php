@@ -1,6 +1,8 @@
 <?php
 namespace App\Core\Framework\Structures;
 
+use App\Core\Framework\Structures\Collection;
+
 class DatabaseResult
 {
 	/**
@@ -87,5 +89,30 @@ class DatabaseResult
 			"rowCount" => $this->rowCount,
 			"fetch" => $this->fetch
 		];
+	}
+
+	/**
+	 * Converts the DatabaseResult object to a Collection.
+	 *
+	 * @return Collection The Collection representation of the DatabaseResult object.
+	 */
+	public function __toCollection(){
+		$Collection = new Collection();
+		foreach ($this->fetch as $Row) {
+			$Collection->addElement($Row);
+		}
+		return $Collection;
+	}
+
+	public function __toArrayModel(string $modelClass){
+		$Collection = new Collection();
+		foreach ($this->fetch as $Row) {
+			$Model = new $modelClass();
+			foreach ($Row as $Key => $Value) {
+				$Model->$Key = $Value;
+			}
+			$Collection->addElement($Model);
+		}
+		return $Collection;
 	}
 }
