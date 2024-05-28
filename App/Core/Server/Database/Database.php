@@ -27,7 +27,7 @@ class Database
 		$User = "root";
 		$Password = "";
 		$Database = "gusi-framework";
-		$Charset = "UTF8";
+		$Charset = "utf8mb4";
 		$DSN = 'mysql:host=' . $Host . ';dbname=' . $Database . ';charset=' . $Charset;
 		
 		$options = [
