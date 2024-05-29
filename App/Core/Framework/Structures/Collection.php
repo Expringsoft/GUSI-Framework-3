@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Structures;
+namespace App\Core\Framework\Structures;
 
 use ArrayObject;
 use App\Core\Exceptions\AppException;
