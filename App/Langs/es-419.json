@@ -9,7 +9,7 @@
   "BUILDING_PAGE": "Pagina en construcción",
   "CONTROLLER_NOT_FOUND": "Controlador no encontrado o definido.",
   "DATABASE_DELETE_FAILED": "No se pudo eliminar el registro.",
-  "DATABASE_DELETE_SUCCESS": "Registro eliminado exitosamente.",
+  "DATABASE_DELETE_SUCCESS": "Registro(s) eliminado(s) exitosamente.",
   "DATABASE_INSERT_FAILED": "No se pudo completar el registro.",
   "DATABASE_INSERT_SUCCESS": "Registro creado exitosamente.",
   "DATABASE_OPERATION_FAILED": "La operación solicitada no se pudo completar.",

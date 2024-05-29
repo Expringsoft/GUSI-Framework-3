@@ -9,7 +9,7 @@
   "BUILDING_PAGE": "Page under construction",
   "CONTROLLER_NOT_FOUND": "Controller not found or defined.",
   "DATABASE_DELETE_FAILED": "Could not delete record.",
-  "DATABASE_DELETE_SUCCESS": "Record deleted successfully.",
+  "DATABASE_DELETE_SUCCESS": "Record(s) deleted successfully.",
   "DATABASE_INSERT_FAILED": "Registration could not be completed.",
   "DATABASE_INSERT_SUCCESS": "Record created successfully.",
   "DATABASE_OPERATION_FAILED": "The requested operation could not be completed.",
