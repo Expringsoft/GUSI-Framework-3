@@ -101,7 +101,7 @@ class App
 	public function AppErrorHandler($errorNumber, $errorMessage, $errorFile, $errorLine)
 	{
 		if (Configuration::AUTOLOG_ERRORS) {
-			$errorData = "Error: $errorNumber\nMessage: $errorMessage\nFile: $errorFile\nLine: $errorLine";
+			$errorData = "\nError: $errorNumber\nMessage: $errorMessage\nFile: $errorFile\nLine: $errorLine";
 			Logger::LogError("AppErrorHandler", $errorData);
 		}
 		try {
