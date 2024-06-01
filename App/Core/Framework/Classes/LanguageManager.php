@@ -1,7 +1,6 @@
 <?php
 namespace App\Core\Framework\Classes;
 
-use Exception;
 use JsonException;
 use App\Core\Server\Session;
 use App\Core\Exceptions\LangException;
