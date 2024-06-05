@@ -16,6 +16,12 @@ abstract class Controller extends Channel implements Controllable
 	private $View;
 	private $Params;
 
+	/**
+	 * Controller constructor.
+	 *
+	 * @param string $Method The name of the method to be executed. Default is 'Main'.
+	 * @param array $args An array of arguments to be passed to the method.
+	 */
 	public function __construct(string $Method = 'Main', $args = [])
 	{
 		$RenderOption = RenderOptions::DEFAULT;
@@ -44,12 +50,27 @@ abstract class Controller extends Channel implements Controllable
 
 	public abstract function Main(...$args);
 
+	/**
+	 * Sets the view to be rendered.
+	 *
+	 * @param string $_ViewURL The URL of the view to be rendered.
+	 * @param array|null $_Params The parameters to be passed to the view.
+	 * @return void
+	 */
 	public function setView($_ViewURL = null, ?array $_Params = null)
 	{
 		$this->View = $_ViewURL;
 		$this->Params = $_Params;
 	}
 
+	/**
+	 * Renders the view based on the provided RenderOptions.
+	 *
+	 * @param RenderOptions $RenderOption The RenderOptions to determine how the view should be rendered.
+	 * @param int $code The HTTP status code to be used in case of an error.
+	 * @return void
+	 * @throws InvalidArgumentException If an invalid RenderOption is provided.
+	 */
 	public function renderView(RenderOptions $RenderOption = RenderOptions::DEFAULT, int $code = 500)
 	{
 		switch ($RenderOption) {

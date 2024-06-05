@@ -255,7 +255,8 @@ class QueryBuilder
 	}
 
 	/**
-	 * Executes the query and returns the result.
+	 * Executes the query, resets the query parts and parameters to their default values and returns the result. 
+	 * This method **must** be called after constructing the query to perform the query.
 	 *
 	 * @return DatabaseResult The result of the query.
 	 */
