@@ -11,23 +11,27 @@ use COM;
 
 class FileManager
 {
-	// Constants
-
-	// Disk space usage cap in GB
+	/**
+	 * The maximum disk space that the application can use in gigabytes.
+	 */
 	public const USAGE_CAP_GB = 20;
-	// Minimum disk space in GB
+	
+	/**
+	 * The minimum disk space that must be available in gigabytes.
+	 */
 	public const MINIMUM_DISK_SPACE_GB = 1;
-	// Root files folder
+	
+	/**
+	 * The root folder for all files.
+	 */
 	public const ROOT_FILES_FOLDER = "Files/";
-
-	// Methods
 
 	/** Get file size in specified data units
 	*	@param string $file
 	*	@param DataUnits $returnType
 	*	@return float
 	*/
-	public static function getFileSize($file, $returnType)
+	public static function getFileSize($file, DataUnits $returnType)
 	{
 		if (!file_exists($file)) {
 			if (Configuration::LOG_ERRORS) {
@@ -54,7 +58,7 @@ class FileManager
 	 * @return float
 	 * @throws UnexpectedValueException if the folder does not exist
 	 */ 
-    public static function getFolderSize($folder, $returnType)
+    public static function getFolderSize($folder, DataUnits $returnType)
     {
         $totalSize = 0;
         $files = new \RecursiveIteratorIterator(
@@ -176,10 +180,10 @@ class FileManager
 	 * @param string $folderName
 	 * @throws SystemIOException if failed to create folder
 	 */
-	public static function createFolder($folderName)
+	public static function createFolder($folderName, $permissions = 0777, $recursive = true)
 	{
 		if (!file_exists($folderName)) {
-			if (!mkdir($folderName, 0777, true)) {
+			if (!mkdir($folderName, $permissions, $recursive)) {
 				throw new SystemIOException("Failed to create folder: '{$folderName}'");
 			}
 		}
@@ -196,6 +200,18 @@ class FileManager
 				throw new SystemIOException("Failed to delete folder: '{$folderName}'");
 			}
 		}
+	}
+
+	/** Delete folder tree
+	 * @param string $dir
+	 * @return bool
+	 */
+	public static function deleteTree($dir) {
+		$files = array_diff(scandir($dir), array('.','..'));
+		foreach ($files as $file) {
+			(is_dir("$dir/$file")) ? self::deleteTree("$dir/$file") : unlink("$dir/$file");
+		}
+		return rmdir($dir);
 	}
 
 	/** Move folder
@@ -315,5 +331,151 @@ class FileManager
 		if (!file_put_contents($fileName, $content, FILE_APPEND)) {
 			throw new SystemIOException("Failed to append to file: '{$fileName}'");
 		}
+	}
+
+	/** Prepend to file
+	 * @param string $fileName
+	 * @param string $content
+	 * @param bool $ignoreUsageCap false
+	 * @throws SystemIOException if failed to prepend to file
+	 */
+	public static function prependToFile($fileName, $content, $ignoreUsageCap = false)
+	{
+		if (!$ignoreUsageCap) {
+			self::checkAppDiskUsage();
+		}
+		$existingContent = file_get_contents($fileName);
+		if (!file_put_contents($fileName, $content . $existingContent)) {
+			throw new SystemIOException("Failed to prepend to file: '{$fileName}'");
+		}
+	}
+
+	/** Read file
+	 * @param string $fileName
+	 * @return string
+	 * @throws SystemIOException if failed to read file
+	 */
+	public static function readFile($fileName = null)
+	{
+		if (!file_exists($fileName)) {
+			throw new SystemIOException("File: '{$fileName}' not found.");
+		}
+		return file_get_contents($fileName);
+	}
+
+	/** Rename file
+	 * @param string $source
+	 * @param string $destination
+	 * @param bool $ignoreUsageCap false
+	 * @throws SystemIOException if failed to rename file
+	 * @throws StorageException if disk usage exceeded
+	 */
+	public static function renameFile($source, $destination, $ignoreUsageCap = false)
+	{
+		if (!$ignoreUsageCap) {
+			self::checkAppDiskUsage();
+		}
+		if (!rename($source, $destination)) {
+			throw new SystemIOException("Failed to rename file: '{$source}' to '{$destination}'");
+		}
+	}
+
+	/** Get file extension
+	 * @param string $fileName
+	 * @return string
+	 */
+	public static function getFileExtension($fileName)
+	{
+		return pathinfo($fileName, PATHINFO_EXTENSION);
+	}
+
+	/**
+	 * Get the real file type of a specified file.
+	 *
+	 * @param string $fileName The path of the file.
+	 * @return string The real file type.
+	 * @throws SystemIOException if failed to determine the file type.
+	 */
+	public static function getFileType($fileName)
+	{
+		$finfo = finfo_open(FILEINFO_MIME_TYPE);
+		$fileType = finfo_file($finfo, $fileName);
+		finfo_close($finfo);
+		if ($fileType === false) {
+			throw new SystemIOException("Failed to determine the file type of '{$fileName}'");
+		}
+		return $fileType;
+	}
+
+	/** Get file name
+	 * @param string $fileName
+	 * @return string
+	 */
+	public static function getFileName($fileName)
+	{
+		return pathinfo($fileName, PATHINFO_FILENAME);
+	}
+
+	/** Get file last modified
+	 * @param string $fileName
+	 * @return int|false Unix timestamp or false if failed to get last modified time
+	 */
+	public static function getFileLastModified($fileName)
+	{
+		return filemtime($fileName);
+	}
+
+	/**
+	 * Checks if a file name is valid (contains only alphanumeric characters, underscores, periods, and hyphens).
+	 */
+	public static function isFilenameValid($fileName): bool
+	{
+		return preg_match('/^[a-zA-Z0-9_.-]*$/', $fileName);
+	}
+
+	/** Upload file
+	 * @param string $fileName
+	 * @param string $destination
+	 * @param bool $overwrite false
+	 * @param bool $ignoreUsageCap false
+	 * @throws SystemIOException if failed to upload file
+	 * @throws StorageException if disk usage exceeded
+	 */
+	public static function uploadFile($fileName, $destination, $overwrite = false, $ignoreUsageCap = false)
+	{
+		if (!$ignoreUsageCap) {
+			self::checkAppDiskUsage();
+		}
+		if (file_exists($destination) && !$overwrite) {
+			throw new SystemIOException("File: '{$destination}' already exists.");
+		}
+		if (!move_uploaded_file($fileName, $destination)) {
+			throw new SystemIOException("Failed to upload file: '{$fileName}' to '{$destination}'");
+		}
+	}
+
+	/**
+	 * Get a chunk of data from a file.
+	 *
+	 * @param string $fileName The path of the file.
+	 * @param int $offset The offset from where to start reading the file.
+	 * @param int $length The length of the chunk to read.
+	 * @return string The chunk of data.
+	 * @throws SystemIOException if failed to read the file.
+	 */
+	public static function getFileChunk($fileName, $offset, $length)
+	{
+		$file = fopen($fileName, 'r');
+		if (!$file) {
+			throw new SystemIOException("Failed to open file: '{$fileName}'");
+		}
+		fseek($file, $offset);
+		$chunk = fread($file, $length);
+		if ($chunk === false) {
+			fclose($file);
+			throw new SystemIOException("Failed to read file: '{$fileName}'");
+		}
+		fclose($file);
+		return $chunk;
 	}
 }
