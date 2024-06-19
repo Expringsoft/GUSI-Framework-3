@@ -69,4 +69,16 @@ abstract class Controller extends Channel implements Controllable
 				break;
 		}
 	}
+
+	/**
+	 * Sets a header to be sent with the response.
+	 *
+	 * @param string $name The name of the header.
+	 * @param string $value The value of the header.
+	 * @return void
+	 */
+	public function setHeader($name, $value)
+	{
+		header($name . ': ' . $value);
+	}
 }
