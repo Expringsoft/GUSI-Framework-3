@@ -1,7 +1,6 @@
 <?php
 namespace App\Core\Framework\Classes;
 
-use App\Core\Application\SharedConsts;
 use App\Core\Framework\Interfaces\Expectable;
 use App\Core\Framework\Structures\Operation;
 

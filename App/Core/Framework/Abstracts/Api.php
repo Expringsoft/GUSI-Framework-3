@@ -8,7 +8,6 @@ use App\Core\Application\SharedConsts;
 use App\Core\Framework\Classes\Strings;
 use App\Core\Framework\Enumerables\Channels;
 use App\Core\Framework\Enumerables\RequestMethods;
-use App\Core\Framework\Interfaces\Channelable;
 use App\Core\Framework\Structures\APIResponse;
 use App\Core\Server\Actions;
 use App\Core\Server\Logger;

@@ -9,10 +9,7 @@ class Home extends Controller
 {
 	public function Main(...$args)
 	{
-		$this::setChannel(Channels::PROD);
-
-		echo self::getChannel()->name;
-		echo self::getModuleChannel()->name;
+		// Set the view
 		$this->setView('Default/Home.php');
 	}
 
