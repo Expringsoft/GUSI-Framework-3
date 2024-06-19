@@ -4,6 +4,7 @@ namespace App\Core\Application;
 
 use App\Core\Exceptions\APIException;
 use App\Core\Exceptions\SecurityException;
+use App\Core\Framework\Classes\Strings;
 use App\Core\Server\Actions;
 use App\Core\Server\Logger;
 use App\Core\Server\Router;
@@ -27,7 +28,6 @@ class App
 	{
 		Session::start();
 		header('x-powered-by: GUSIFramework');
-		header('Server: CustomApache');
 		error_reporting(Configuration::DEBUG_ENABLED ? E_ALL : 0);
 		set_error_handler(array($this, 'AppErrorHandler'));
 		set_exception_handler(array($this, 'AppExceptionHandler'));
@@ -78,7 +78,7 @@ class App
 		}
 		if ($exception instanceof APIException) {
 			Actions::clearOutputBuffer();
-			echo Actions::printLocalized("API_UNHANDLED_ERROR");
+			echo Actions::printLocalized(Strings::API_UNHANDLED_EXCEPTION);
 		} else {
 			Actions::renderError();
 		}

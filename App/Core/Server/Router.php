@@ -44,7 +44,7 @@ class Router extends SingletonInstance
 	 * Adds a route to the router.
 	 * 
 	 * @param string $route The route.
-	 * @param array $controller The controller and method.
+	 * @param string|array $controller If a string, the controller name (Example::class). If an array, the controller name and method ([Example::class, 'Main']). If method is not specified, it defaults to 'Main'.
 	 * 
 	 * @return $this
 	 */
@@ -87,77 +87,144 @@ class Router extends SingletonInstance
 	/**
 	 * Obtains the operating system from the user agent.
 	 *
-	 * @return string The operating system from the user agent.  Unknown if not found.
+	 * @param string|null $UserAgent The user agent string to parse. If null, the user agent from the request will be used.
+	 * @return string The operating system from the user agent. Unknown if not found.
 	 */
-	public static function getOSFromUserAgent()
+	public static function getOSFromUserAgent(string $UserAgent = null)
 	{
 		$os = "Unknown";
+		$user_agent = null;
 
-		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
-			return $os;
+		if ($UserAgent == null) {
+			if (!isset($_SERVER['HTTP_USER_AGENT'])) {
+				return $os;
+			}
+			$user_agent = $_SERVER['HTTP_USER_AGENT'];
+		} else {
+			$user_agent = $UserAgent;
 		}
 
-		$user_agent = $_SERVER['HTTP_USER_AGENT'];
-
 		$os_array = array(
-			'/windows nt 10/i'      =>  'Windows 10',
-			'/windows nt 6.3/i'     =>  'Windows 8.1',
-			'/windows nt 6.2/i'     =>  'Windows 8',
-			'/windows nt 6.1/i'     =>  'Windows 7',
-			'/windows nt 6.0/i'     =>  'Windows Vista',
-			'/windows nt 5.2/i'     =>  'Windows Server 2003/XP x64',
-			'/windows nt 5.1/i'     =>  'Windows XP',
-			'/windows xp/i'         =>  'Windows XP',
-			'/windows nt 5.0/i'     =>  'Windows 2000',
-			'/windows me/i'         =>  'Windows ME',
-			'/win98/i'              =>  'Windows 98',
-			'/win95/i'              =>  'Windows 95',
-			'/win16/i'              =>  'Windows 3.11',
-			'/iphone(?: ([0-9.,_]+))?/i' =>  'iPhone$1',
-			'/macintosh|mac os x/i' =>  'Mac OS X',
-			'/mac_powerpc/i'        =>  'Mac OS 9',
-			'/android(?: ([0-9.]+))?/i'  =>  'Android$1',
-			'/linux/i'              =>  'Linux',
-			'/ubuntu/i'             =>  'Ubuntu',
-			'/ipod/i'               =>  'iPod',
-			'/ipad/i'               =>  'iPad',
-			'/blackberry/i'         =>  'BlackBerry',
-			'/webos/i'              =>  'Mobile'
+			'/googlebot-mobile/i'					=> 'Googlebot Mobile',
+			'/googlebot/i'							=> 'Googlebot',
+			'/bingbot/i'							=> 'Bingbot',
+			'/msnbot/i'								=> 'MSNbot',
+			'/grapeshotcrawler/i'					=> 'Grapeshot Crawler Bot',
+			'/yandexbot/i'							=> 'Yandexbot',
+			'/baiduspider/i'						=> 'Baiduspider Bot',
+			'/duckduckbot/i'						=> 'DuckDuckGo Bot',
+			'/duckassistbot/i'						=> 'DuckAssistBot',
+			'/facebookexternalhit/i'				=> 'Facebook Bot (External Hit)',
+			'/facebookbot/i'						=> 'Facebook Bot',
+			'/telegrambot/i'						=> 'Telegram Bot',
+			'/twitterbot/i'							=> 'Twitter Bot',
+			'/discordbot/i'							=> 'Discord Bot',
+			'/linkedinbot/i'						=> 'LinkedIn Bot',
+			'/pinterestbot/i'						=> 'Pinterest Bot',
+			'/slackbot-linkexpanding/i'				=> 'Slack Bot (Link Expanding)',
+			'/slackbot-linkpreview/i'				=> 'Slack Bot (Link Preview)',
+			'/slackbot/i'							=> 'Slack Bot',
+			'/applebot/i'							=> 'Apple Bot',
+			'/yahoo! slurp/i'						=> 'Yahoo! Slurp Bot',
+			'/ia_archiver/i'						=> 'Alexa Bot',
+			'/archive.org_bot/i'					=> 'Archive.org Bot',
+			'/adobeair/i'							=> 'Adobe AIR',
+			'/windows phone(?: ([0-9.,_]+))?/i'		=> 'Windows Phone$1',
+			'/windows nt 10/i'						=> 'Windows 10',
+			'/windows nt 6.3/i'						=> 'Windows 8.1',
+			'/windows nt 6.2/i'						=> 'Windows 8',
+			'/windows nt 6.1/i'						=> 'Windows 7',
+			'/windows nt 6.0/i'						=> 'Windows Vista',
+			'/windows nt 5.2/i'						=> 'Windows Server 2003/XP x64',
+			'/windows nt 5.1/i'						=> 'Windows XP',
+			'/windows xp/i'							=> 'Windows XP',
+			'/windows nt 5.0/i'						=> 'Windows 2000',
+			'/windows me/i'							=> 'Windows ME',
+			'/win98/i'								=> 'Windows 98',
+			'/win95/i'								=> 'Windows 95',
+			'/win16/i'								=> 'Windows 3.11',
+			'/iphone(?: ([0-9.,_]+))?/i'			=> 'iPhone$1',
+			'/macintosh|mac os x/i'					=> 'Mac OS X',
+			'/mac_powerpc/i'						=> 'Mac OS 9',
+			'/cros x86_64/i'						=> 'Chrome OS x64',
+			'/cros armv7l/i'						=> 'Chrome OS ARM',
+			'/cros aarch64/i'						=> 'Chrome OS ARM64',
+			'/android(?: ([0-9.]+))?/i'				=> 'Android$1',
+			'/freebsd/i'							=> 'FreeBSD',
+			'/linux/i'								=> 'Linux',
+			'/ubuntu/i'								=> 'Ubuntu',
+			'/ipod/i'								=> 'iPod',
+			'/ipad/i'								=> 'iPad',
+			'/blackberry/i'							=> 'BlackBerry',
+			'/webos/i'								=> 'Mobile'
 		);
 
 		foreach ($os_array as $regex => $value) {
 			if (preg_match($regex, $user_agent, $matches)) {
-				$os = str_replace('$1', isset($matches[1]) ? $matches[1] : '', $value);
+				$os = str_replace('$1', isset($matches[1]) ? ' ' . $matches[1] : '', $value);
 				break;
 			}
 		}
+
+		if ($os == "Windows 10" && isset($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'])) {
+			if (version_compare($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'], "13", ">=")) {
+				$os = "Windows 11";
+			}
+		}
+
 		return $os;
 	}
 
 	/**
 	 * Obtains the browser from the user agent.
 	 *
-	 * @return string The browser from the user agent.  Unknown if not found.
+	 * @param string|null $UserAgent The user agent string to parse. If null, the user agent from the request will be used.
+	 * @return string The browser from the user agent. Unknown if not found.
 	 */
-	public static function getBrowserFromUserAgent()
+	public static function getBrowserFromUserAgent(string $UserAgent = null)
 	{
-		// Get the user agent (HTTP User Agent)
-		$user_agent = $_SERVER['HTTP_USER_AGENT'];
-
-		// Get the browser
 		$browser = "Unknown";
+		$user_agent = null;
+
+		if ($UserAgent == null) {
+			if (!isset($_SERVER['HTTP_USER_AGENT'])) {
+				return "Unknown";
+			}
+			$user_agent = $_SERVER['HTTP_USER_AGENT'];
+		} else {
+			$user_agent = $UserAgent;
+		}
+
 		$browser_array = array(
-			'/msie/i'       => 'Internet Explorer',
-			'/edg/i'       => 'Microsoft Edge',
-			'/edge/i'       => 'Microsoft Edge',
-			'/firefox/i'    => 'Firefox',
-			'/chrome/i'     => 'Chrome',
-			'/safari/i'     => 'Safari',
-			'/opera/i'      => 'Opera',
-			'/netscape/i'   => 'Netscape',
-			'/maxthon/i'    => 'Maxthon',
-			'/konqueror/i'  => 'Konqueror',
-			'/mobile/i'     => 'Dispositivo móvil'
+			'/postmanruntime/i'	=> 'Postman API Platform',
+			'/trident\/4.0/i'	=> 'Internet Explorer 8',
+			'/trident\/5.0/i'	=> 'Internet Explorer 9',
+			'/trident\/6.0/i'	=> 'Internet Explorer 10',
+			'/trident\/7.0/i'	=> 'Internet Explorer 11',
+			'/trident/i'		=> 'Internet Explorer',
+			'/msie/i'			=> 'Internet Explorer',
+			'/duckduckgo/i'		=> 'DuckDuckGo',
+			'/edg/i'			=> 'Microsoft Edge',
+			'/edge/i'			=> 'Microsoft Edge',
+			'/msedge/i'			=> 'Microsoft Edge',
+			'/firefox/i'		=> 'Mozilla Firefox',
+			'/opera/i'			=> 'Opera',
+			'/opr/i'			=> 'Opera',
+			'/origin/i'			=> 'EA Origin',
+			'/netscape/i'		=> 'Netscape',
+			'/maxthon/i'		=> 'Maxthon',
+			'/konqueror/i'		=> 'Konqueror',
+			'/brave/i'			=> 'Brave',
+			'/vivaldi/i'		=> 'Vivaldi',
+			'/yabrowser/i'		=> 'Yandex',
+			'/yowser/i'			=> 'Yandex',
+			'/samsungbrowser/i'	=> 'Samsung Internet',
+			'/epic/i'			=> 'Epic',
+			'/maxthon/i'		=> 'Maxthon',
+			'/ucbrowser/i'		=> 'UC Browser',
+			'/chrome/i'			=> 'Chrome',
+			'/safari/i'			=> 'Safari',
+			'/mobile/i'			=> 'Mobile Device',
 		);
 
 		foreach ($browser_array as $regex => $value) {
@@ -323,36 +390,34 @@ class Router extends SingletonInstance
 	 */
 	public function createRequest()
 	{
-		// Store request Uri
+		// Store the request URI
 		$uri = $this->getRequestUri();
-		// Since all request starts with / this will be the initial item.
+		// Initial item in the URI parts array is /
 		$uriParts = ["/"];
 		// Split the URI into parts
 		$uriPath = explode('/', $uri);
-		// By splitting the URI by / we lost the first part / at the beginning of the request URI
-		// which is the root path. If first part of path is "" it means we have
-		// a request that is NOT the root path, so we add it to the array.
+		// The root path / is lost when splitting the URI; add it back if the first part is not empty
 		if ($uriPath[0] != "") {
 			$uriParts = array_merge($uriParts, $uriPath);
 		}
 
-		// Get data received via JSON, for example in fetch requests that are POST
+		// Retrieve data received via JSON (e.g., in POST requests)
 		$jsonData = json_decode(file_get_contents("php://input"), true);
 
-		// If there is no JSON data then create an empty array
+		// Create an empty array if there is no JSON data
 		if (!is_array($jsonData)) {
 			$jsonData = [];
 		}
 
-		// If there is no POST data then create an empty array
+		// Create an empty array if there is no POST data
 		if (!is_array($_POST)) {
 			$_POST = [];
 		}
 
-		// Store the data received via JSON and the data received via POST
+		// Merge JSON data and POST data
 		$this->parameters['POST'] = array_merge($_POST, $jsonData);
 
-		// If there is a query param we added it to GET parameters array
+		// Add query parameters to the GET parameters array
 		$queryString = parse_url($uri, PHP_URL_QUERY);
 		if ($queryString) {
 			parse_str($queryString, $queryParams);
@@ -361,10 +426,10 @@ class Router extends SingletonInstance
 			}
 		}
 
-		// Store URI Path segments without query params
+		// Store URI path segments without query parameters
 		$this->parameters['PATH_SEGMENTS'] = [];
 		foreach ($uriParts as $part) {
-			$value = explode('?', $part)[0]; // To get value before '?'
+			$value = explode('?', $part)[0]; // Retrieve the value before '?'
 			$this->parameters['PATH_SEGMENTS'][] = $value;
 		}
 
@@ -378,46 +443,41 @@ class Router extends SingletonInstance
 	 */
 	public function handleRequest()
 	{
-		// Get the requested URI
-		$requestedRoute = $this->getRequestUri();
-
 		// Iterate through Module-defined routes
 		foreach ($this->routes as $route => $controllerAndMethod) {
-			// Similar to the requested route, we split Module-defined paths by /
-			// to compare each segment with the requested route segments
+			// Split Module-defined paths by / to compare each segment with the requested route segments
 			$routeParts = explode('/', $route);
 			// The first part of the route is always /
 			$routeParts[0] = "/";
-			// If the route is /, we set the route segments to / to avoid an empty array
-			// otherwise we set the route segments to the route parts
+			// Set the route segments to / if the route is /, otherwise use the route parts
 			$routeSegments = $route === "/" ? ["/"] : $routeParts;
 
-			// If the number of segments in the requested route does not match the number of segments in the route, we continue to the next route
+			// Continue to the next route if the number of segments in the requested route 
+			// does not match the number of segments in the route
 			if (count($routeSegments) != count($this->parameters['PATH_SEGMENTS'])) {
 				continue;
 			}
 
-			// We initialize the parameters array
+			// Initialize the parameters array
 			$parameters = [];
-			// We iterate through the route segments
+			// Iterate through the route segments
 			for ($i = 0; $i < count($routeSegments); $i++) {
-				// If the route segment is a parameter defined by param name enclosed with {}, we add it to the parameters array
+				// Add to the parameters array if the route segment is a parameter defined by param name enclosed with {}
 				if ($routeSegments[$i][0] == '{' && $routeSegments[$i][-1] == '}') {
 					$parameters[trim($routeSegments[$i], '{}')] = $this->parameters['PATH_SEGMENTS'][$i];
 				} elseif ($routeSegments[$i] != $this->parameters['PATH_SEGMENTS'][$i]) {
-					// If the route segment does not match the requested route segment, we continue to the next route
+					// Continue to the next route if the route segment does not match the requested route segment
 					continue 2;
 				}
 			}
 
-			// If we reach this point, it means that the route matches the requested route
-			// so we create a new instance of the controller and call the method
-			// with the parameters array, 0 is the controller class and 1 is the method.
+			// At this point, the route matches the requested route; create a new instance of 
+			// the controller and call the method with the parameters array, 0 is the controller class and 1 is the method.
 			$controller = new $controllerAndMethod[0]($controllerAndMethod[1], $parameters);
 			return;
 		}
 
-		// If no route matches the requested route, we render a 404 page
+		// Render a 404 page if no route matches the requested route
 		Actions::renderNotFound();
 	}
 }
