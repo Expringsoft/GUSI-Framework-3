@@ -9,3 +9,6 @@ App/Logs/Errors/*.log
 
 # Ignore .json test results files in App/Tests/Results
 App/Tests/Results/*.json
+
+# Ignore .cache files in App/Cache
+App/Cache/*.cache
