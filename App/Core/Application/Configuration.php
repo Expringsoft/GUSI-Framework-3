@@ -72,7 +72,7 @@ class Configuration
     public const AUTOLOG_EXCEPTIONS = true;
 
     /**
-     * Automatically log exceptions.
+     * Automatically log errors.
      */
     public const AUTOLOG_ERRORS = true;
 
