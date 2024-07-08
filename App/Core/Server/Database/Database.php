@@ -2,6 +2,7 @@
 
 namespace App\Core\Server\Database;
 
+use App\Core\Application\Configuration;
 use App\Core\Exceptions\DatabaseException;
 use App\Core\Framework\Classes\QueryBuilder;
 use App\Core\Framework\Classes\Strings;
@@ -23,12 +24,13 @@ class Database
 	 */
 	public function __construct()
 	{
-		$Host = "localhost";
-		$User = "root";
-		$Password = "";
-		$Database = "gusi-framework";
-		$Charset = "utf8mb4";
-		$DSN = 'mysql:host=' . $Host . ';dbname=' . $Database . ';charset=' . $Charset;
+		$Host = Configuration::DB_HOST;
+		$Port = Configuration::DB_PORT;
+		$User = getenv(Configuration::DB_USER_ENV_VAR);
+		$Password = getenv(Configuration::DB_PASSWORD_ENV_VAR);
+		$Database = Configuration::DB_NAME;
+		$Charset = Configuration::DB_CHARSET;
+		$DSN = "mysql:host={$Host};port={$Port};dbname={$Database};charset={$Charset}";	
 		
 		$options = [
 			PDO::ATTR_EMULATE_PREPARES   => false,

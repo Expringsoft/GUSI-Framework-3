@@ -11,26 +11,13 @@ use COM;
 
 class FileManager
 {
-	/**
-	 * The maximum disk space that the application can use in gigabytes.
+	/** 
+	 * Get file size in specified data units
+	 * 
+	 *	@param string $file
+	 *	@param DataUnits $returnType
+	 *	@return float
 	 */
-	public const USAGE_CAP_GB = 20;
-	
-	/**
-	 * The minimum disk space that must be available in gigabytes.
-	 */
-	public const MINIMUM_DISK_SPACE_GB = 1;
-	
-	/**
-	 * The root folder for all files.
-	 */
-	public const ROOT_FILES_FOLDER = "Files/";
-
-	/** Get file size in specified data units
-	*	@param string $file
-	*	@param DataUnits $returnType
-	*	@return float
-	*/
 	public static function getFileSize($file, DataUnits $returnType)
 	{
 		if (!file_exists($file)) {
@@ -52,7 +39,9 @@ class FileManager
 		return self::convertBytesTo($size, $returnType);
 	}
 
-	/** Get folder size in specified data units
+	/** 
+	 * Get folder size in specified data units
+	 * 
 	 * @param string $folder
 	 * @param DataUnits $returnType
 	 * @return float
@@ -74,7 +63,9 @@ class FileManager
     }
 	
 
-	/** Get total disk space in specified data units
+	/** 
+	 * Get total disk space in specified data units
+	 * 
 	 * @param DataUnits $returnType
 	 * @return float
 	 */
@@ -83,7 +74,9 @@ class FileManager
 		return self::convertBytesTo(disk_total_space("."), $returnType);
 	}
 
-	/** Get available disk space in specified data units
+	/** 
+	 * Get available disk space in specified data units
+	 * 
 	 * @param DataUnits $returnType
 	 * @return float
 	 */
@@ -92,7 +85,9 @@ class FileManager
 		return self::convertBytesTo(disk_free_space("."), $returnType);
 	}
 
-	/** Get used disk space in specified data units
+	/** 
+	 * Get used disk space in specified data units
+	 * 
 	 * @param DataUnits $returnType
 	 * @return float
 	 */
@@ -101,16 +96,20 @@ class FileManager
 		return self::convertBytesTo(self::getDiskTotalSpace(DataUnits::BYTES) - self::getDiskAvailableSpace(DataUnits::BYTES), $returnType);
 	}
 
-	/** Get application used space in specified data units
+	/** 
+	 * Get application used space in specified data units
+	 * 
 	 * @param DataUnits $returnType
 	 * @return float
 	 */
 	public static function getAppUsedSpace(DataUnits $returnType)
 	{
-		return self::convertBytesTo(self::getFolderSize(self::ROOT_FILES_FOLDER, DataUnits::BYTES), $returnType);
+		return self::convertBytesTo(self::getFolderSize(".", DataUnits::BYTES), $returnType);
 	}
 
-	/** Convert bytes to specified data units
+	/** 
+	 * Convert bytes to specified data units
+	 * 
 	 * @param float $bytes
 	 * @param DataUnits $returnType
 	 * @return float
@@ -151,32 +150,61 @@ class FileManager
 		}
 	}
 
-	/** Check disk space
-	 * @throws StorageException if not enough disk space available
+	/** 
+	 * Checks if the disk has the minimum required space
+	 * 
+	 * @return bool true if the disk has the minimum required space, false otherwise
 	 */
-	public static function checkDiskSpace()
+	public static function isMinimumDiskSpaceAvailable()
 	{
-		$availableSpace = self::getDiskAvailableSpace(DataUnits::BYTES);
-		if (self::convertBytesTo($availableSpace, DataUnits::GIGABYTES) < self::MINIMUM_DISK_SPACE_GB) {
-			throw new StorageException("Not enough disk space available.");
-		}
+		return self::getDiskAvailableSpace(DataUnits::GIGABYTES) > Configuration::MINIMUM_DISK_SPACE_GB;
 	}
 
-	/** Check application disk usage
-	 * @throws StorageException if disk usage exceeded
-	 * @throws SystemIOException if failed to get folder size
-	 * @throws StorageException if disk has not enough space
+	/** 
+	 * Checks if the disk has the minimum required space
+	 * 
+	 * @param float $size
+	 * @param DataUnits $dataUnits
+	 * @return bool true if the disk has the minimum required space, false otherwise
 	 */
-	public static function checkAppDiskUsage()
+	public static function hasAvailableDiskSpace(float $size, DataUnits $dataUnits)
 	{
-		self::checkDiskSpace();
-		$usedSpace = self::getFolderSize(self::ROOT_FILES_FOLDER, DataUnits::BYTES);
-		if (self::convertBytesTo($usedSpace, DataUnits::GIGABYTES) > self::USAGE_CAP_GB) {
-			throw new StorageException("Application disk usage exceeded.");
-		}
+		return self::getDiskAvailableSpace($dataUnits) > self::convertBytesTo($size, $dataUnits);
 	}
 
-	/** Create folder
+	/** 
+	 * Checks if the application disk usage is within the limit
+	 * 
+	 * @return bool true if the application disk usage is within the limit, false otherwise
+	 */
+	public static function isAppUsedSpaceWithinLimits()
+	{
+		return self::getAppUsedSpace(DataUnits::GIGABYTES) <= Configuration::APP_STORAGE_USAGE_CAP_GB;
+	}
+
+	/** 
+	 * Checks if the disk has the minimum required space and if the application disk usage is within the limit
+	 */
+	public static function isStorageUsageWithinLimits()
+	{
+		return self::isMinimumDiskSpaceAvailable() && self::isAppUsedSpaceWithinLimits();
+	}
+
+	/** 
+	 * Checks if the application has the minimum required space
+	 * 
+	 * @param float $size
+	 * @param DataUnits $dataUnits
+	 * @return bool true if the application has the minimum required space, false otherwise
+	 */
+	public static function hasAvailableAppSpace(float $size, DataUnits $dataUnits)
+	{
+		return self::getAppUsedSpace($dataUnits) + self::convertBytesTo($size, $dataUnits) <= Configuration::APP_STORAGE_USAGE_CAP_GB;
+	}
+
+	/** 
+	 * Create folder
+	 * 
 	 * @param string $folderName
 	 * @throws SystemIOException if failed to create folder
 	 */
@@ -189,7 +217,9 @@ class FileManager
 		}
 	}
 
-	/** Delete folder
+	/** 
+	 * Delete folder
+	 * 
 	 * @param string $folderName
 	 * @throws SystemIOException if failed to delete folder
 	 */
@@ -202,7 +232,9 @@ class FileManager
 		}
 	}
 
-	/** Delete folder tree
+	/** 
+	 * Delete folder tree
+	 * 
 	 * @param string $dir
 	 * @return bool
 	 */
@@ -214,7 +246,21 @@ class FileManager
 		return rmdir($dir);
 	}
 
-	/** Move folder
+	/** 
+	 * Clear folder contents
+	 * 
+	 * @param string $dir
+	 */
+	public static function clearFolder($dir) {
+		$files = glob($dir . '/*');
+		foreach ($files as $file) {
+			is_dir($file) ? self::deleteTree($file) : unlink($file);
+		}
+	}
+
+	/** 
+	 * Move folder
+	 * 
 	 * @param string $source
 	 * @param string $destination
 	 * @param bool $ignoreUsageCap false
@@ -223,15 +269,20 @@ class FileManager
 	 */
 	public static function moveFolder($source, $destination, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not move folder: App disk usage exceeded");
 		}
 		if (!rename($source, $destination)) {
 			throw new SystemIOException("Failed to move folder: '{$source}' to '{$destination}'");
 		}
 	}
 
-	/** Copy folder
+	/** 
+	 * Copy folder
+	 * 
 	 * @param string $source
 	 * @param string $destination
 	 * @param bool $ignoreUsageCap false
@@ -240,8 +291,11 @@ class FileManager
 	 */
 	public static function copyFolder($source, $destination, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not copy folder: App disk usage exceeded");
 		}
 		if (!copy($source, $destination)) {
 			throw new SystemIOException("Failed to copy folder: '{$source}' to '{$destination}'");
@@ -263,7 +317,9 @@ class FileManager
 		}
 	}
 
-	/** Move file
+	/** 
+	 * Move file
+	 * 
 	 * @param string $source
 	 * @param string $destination
 	 * @param bool $ignoreUsageCap false
@@ -272,15 +328,20 @@ class FileManager
 	 */
 	public static function moveFile($source, $destination, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not move file: App disk usage exceeded");
 		}
 		if (!rename($source, $destination)) {
 			throw new SystemIOException("Failed to move file: '{$source}' to '{$destination}'");
 		}
 	}
 
-	/** Copy file
+	/** 
+	 * Copy file
+	 * 
 	 * @param string $source
 	 * @param string $destination
 	 * @param bool $ignoreUsageCap false
@@ -289,15 +350,50 @@ class FileManager
 	 */
 	public static function copyFile($source, $destination, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not copy file: App disk usage exceeded");
 		}
 		if (!copy($source, $destination)) {
 			throw new SystemIOException("Failed to copy file: '{$source}' to '{$destination}'");
 		}
 	}
 
-	/** Save file
+	/** 
+	 * Create file
+	 * 
+	 * @param string $fileName The full path of the file to create
+	 * @param string $content File content, empty by default
+	 * @param int $permissions Permissions for the file, 0777 by default
+	 * @param bool $overwrite If true, the file will be overwritten if it already exists, false by default
+	 * @param bool $ignoreUsageCap If true, the disk usage cap will be ignored, false by default
+	 * @return int|false The number of bytes written to the file or false if failed to create file
+	 * @throws SystemIOException if failed to create file
+	 * @throws StorageException if disk usage exceeded
+	 */
+	public static function createFile($fileName, $content = '', $overwrite = false, $permissions = 0777, $ignoreUsageCap = false)
+	{
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not create file: App disk usage exceeded");
+		}
+		if (file_exists($fileName) && !$overwrite) {
+			throw new SystemIOException("File: '{$fileName}' already exists.");
+		}
+		$result = file_put_contents($fileName, $content);
+		if (!$result || !chmod($fileName, $permissions)) {
+			throw new SystemIOException("Failed to create file: '{$fileName}'");
+		}
+		return $result;
+	}
+
+	/** 
+	 * Save file content without modifying the file permissions
+	 * 
 	 * @param string $fileName
 	 * @param string $content
 	 * @param bool $overwrite false
@@ -306,8 +402,11 @@ class FileManager
 	 */
 	public static function saveFile($fileName, $content, $overwrite = false, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not save file: App disk usage exceeded");
 		}
 		if (file_exists($fileName) && !$overwrite) {
 			throw new SystemIOException("File: '{$fileName}' already exists.");
@@ -317,7 +416,9 @@ class FileManager
 		}
 	}
 
-	/** Append to file
+	/** 
+	 * Append to file
+	 * 
 	 * @param string $fileName
 	 * @param string $content
 	 * @param bool $ignoreUsageCap false
@@ -325,15 +426,20 @@ class FileManager
 	 */
 	public static function appendToFile($fileName, $content, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not append to file: App disk usage exceeded");
 		}
 		if (!file_put_contents($fileName, $content, FILE_APPEND)) {
 			throw new SystemIOException("Failed to append to file: '{$fileName}'");
 		}
 	}
 
-	/** Prepend to file
+	/** 
+	 * Prepend to file
+	 * 
 	 * @param string $fileName
 	 * @param string $content
 	 * @param bool $ignoreUsageCap false
@@ -341,8 +447,11 @@ class FileManager
 	 */
 	public static function prependToFile($fileName, $content, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not prepend file: App disk usage exceeded");
 		}
 		$existingContent = file_get_contents($fileName);
 		if (!file_put_contents($fileName, $content . $existingContent)) {
@@ -350,7 +459,9 @@ class FileManager
 		}
 	}
 
-	/** Read file
+	/** 
+	 * Read file
+	 * 
 	 * @param string $fileName
 	 * @return string
 	 * @throws SystemIOException if failed to read file
@@ -363,24 +474,34 @@ class FileManager
 		return file_get_contents($fileName);
 	}
 
-	/** Rename file
+	/** 
+	 * Rename file
+	 * 
 	 * @param string $source
 	 * @param string $destination
 	 * @param bool $ignoreUsageCap false
 	 * @throws SystemIOException if failed to rename file
 	 * @throws StorageException if disk usage exceeded
 	 */
-	public static function renameFile($source, $destination, $ignoreUsageCap = false)
+	public static function renameFile($source, $destination, $overwrite = false, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not rename file: App disk usage exceeded");
+		}
+		if (file_exists($destination) && !$overwrite) {
+			throw new SystemIOException("File: '{$destination}' already exists.");
 		}
 		if (!rename($source, $destination)) {
 			throw new SystemIOException("Failed to rename file: '{$source}' to '{$destination}'");
 		}
 	}
 
-	/** Get file extension
+	/** 
+	 * Get file extension
+	 * 
 	 * @param string $fileName
 	 * @return string
 	 */
@@ -407,7 +528,9 @@ class FileManager
 		return $fileType;
 	}
 
-	/** Get file name
+	/** 
+	 * Get file name
+	 * 
 	 * @param string $fileName
 	 * @return string
 	 */
@@ -416,7 +539,9 @@ class FileManager
 		return pathinfo($fileName, PATHINFO_FILENAME);
 	}
 
-	/** Get file last modified
+	/** 
+	 * Get file last modified
+	 * 
 	 * @param string $fileName
 	 * @return int|false Unix timestamp or false if failed to get last modified time
 	 */
@@ -427,13 +552,18 @@ class FileManager
 
 	/**
 	 * Checks if a file name is valid (contains only alphanumeric characters, underscores, periods, and hyphens).
+	 * 
+	 * @param string $fileName The file name to check.
+	 * @return bool True if the file name is valid, false otherwise.
 	 */
 	public static function isFilenameValid($fileName): bool
 	{
 		return preg_match('/^[a-zA-Z0-9_.-]*$/', $fileName);
 	}
 
-	/** Upload file
+	/** 
+	 * Upload file
+	 * 
 	 * @param string $fileName
 	 * @param string $destination
 	 * @param bool $overwrite false
@@ -443,8 +573,11 @@ class FileManager
 	 */
 	public static function uploadFile($fileName, $destination, $overwrite = false, $ignoreUsageCap = false)
 	{
-		if (!$ignoreUsageCap) {
-			self::checkAppDiskUsage();
+		if (!self::isMinimumDiskSpaceAvailable()) {
+			throw new StorageException("Could not perform this action: Minimum disk space not available");
+		}
+		if (!$ignoreUsageCap && !self::isAppUsedSpaceWithinLimits()) {
+			throw new StorageException("Could not save file: App disk usage exceeded");
 		}
 		if (file_exists($destination) && !$overwrite) {
 			throw new SystemIOException("File: '{$destination}' already exists.");

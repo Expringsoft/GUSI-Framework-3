@@ -34,7 +34,7 @@ class Configuration
     /**
      * The name of environment variable which stores encryption key for the application.
      */
-    public const ENV_CRYPTOGRAPHY_KEY_NAME = "GUSI-FRAMEWORK-ENCRYPTION-KEY";
+    public const ENV_CRYPTOGRAPHY_KEY_NAME = "GUSI_FRAMEWORK_ENCRYPTION_KEY";
 
     /**
      * Enable or disable debug mode.
@@ -85,4 +85,78 @@ class Configuration
      * Log language errors.
      */
     public const LOG_LANGUAGE_ERRORS = true;
+
+
+
+    #region Storage configuration
+
+    /**
+     * The maximum disk space that the application can use in gigabytes.
+     */
+    public const APP_STORAGE_USAGE_CAP_GB = 20;
+
+    /**
+     * The minimum disk space that must be available in gigabytes.
+     */
+    public const MINIMUM_DISK_SPACE_GB = 1;
+
+    /**
+     * The root folder for all stored files.
+     */
+    public const APP_STORAGE_FOLDER = "Files/";
+
+    #endregion
+
+    #region Cache configuration
+
+    /**
+     * The cache directory.
+     */
+    const CACHE_FOLDER = "App/Cache/";
+
+    /**
+     * The cache file extension.
+     */
+    const CACHE_FILE_EXTENSION = ".cache";
+
+    /**
+     * The maximum cache size in megabytes.
+     */
+    const MAX_CACHE_SIZE_MB = 25;
+
+    #endregion
+
+    #region Database configuration
+
+    /**
+     * The database host.
+     */
+    public const DB_HOST = "localhost";
+
+    /**
+     * The database port.
+     */
+    public const DB_PORT = 3306;
+
+    /**
+     * The database name.
+     */
+    public const DB_NAME = "gusi-framework";
+
+    /**
+     * The database charset.
+     */
+    public const DB_CHARSET = "utf8mb4";
+
+    /**
+     * The database user environment variable.
+     */
+    public const DB_USER_ENV_VAR = "GUSI_FRAMEWORK_DB_USER";
+
+    /**
+     * The database password environment variable.
+     */
+    public const DB_PASSWORD_ENV_VAR = "GUSI_FRAMEWORK_DB_PASSWORD";
+
+    #endregion
 }
