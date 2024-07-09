@@ -11,6 +11,7 @@ use App\Core\Framework\Abstracts\Channel;
 use App\Core\Server\Logger;
 use InvalidArgumentException;
 use PDOException;
+
 abstract class Controller extends Channel implements Controllable
 {
 	private $View;
