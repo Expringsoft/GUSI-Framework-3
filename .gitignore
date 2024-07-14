@@ -12,3 +12,7 @@ App/Tests/Results/*.json
 
 # Ignore .cache files in App/Cache
 App/Cache/*.cache
+
+# Ignore files stored in Files/ except for .htaccess.
+Files/*
+!Files/.htaccess
