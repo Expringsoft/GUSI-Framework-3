@@ -101,6 +101,12 @@ class Configuration
     public const MINIMUM_DISK_SPACE_GB = 1;
 
     /**
+     * The maximum upload size in megabytes.
+     * This value should be less than or equal to the value set in the php.ini file.
+     */
+    public const MAX_UPLOAD_SIZE_MB = 100;
+
+    /**
      * The root folder for all stored files.
      */
     public const APP_STORAGE_FOLDER = "Files/";
