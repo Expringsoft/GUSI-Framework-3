@@ -1,39 +1,36 @@
 <IfModule mod_deflate.c>
-AddOutputFilterByType DEFLATE application/javascript
-AddOutputFilterByType DEFLATE application/x-javascript
-AddOutputFilterByType DEFLATE application/json
-AddOutputFilterByType DEFLATE application/x-json
-AddOutputFilterByType DEFLATE application/rss+xml
-AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
-AddOutputFilterByType DEFLATE application/x-font
-AddOutputFilterByType DEFLATE application/x-font-opentype
-AddOutputFilterByType DEFLATE application/x-font-otf
-AddOutputFilterByType DEFLATE application/x-font-truetype
-AddOutputFilterByType DEFLATE application/x-font-ttf
-AddOutputFilterByType DEFLATE application/x-javascript
-AddOutputFilterByType DEFLATE application/xhtml+xml
-AddOutputFilterByType DEFLATE application/xml
-AddOutputFilterByType DEFLATE font/opentype
-AddOutputFilterByType DEFLATE font/otf
-AddOutputFilterByType DEFLATE font/ttf
-AddOutputFilterByType DEFLATE image/svg+xml
-AddOutputFilterByType DEFLATE image/x-icon
-AddOutputFilterByType DEFLATE text/css
-AddOutputFilterByType DEFLATE text/html
-AddOutputFilterByType DEFLATE text/javascript
-AddOutputFilterByType DEFLATE text/plain
-AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/x-json
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font
+    AddOutputFilterByType DEFLATE application/x-font-opentype
+    AddOutputFilterByType DEFLATE application/x-font-otf
+    AddOutputFilterByType DEFLATE application/x-font-truetype
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE image/x-icon
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
 </IfModule>
 
 Options -Indexes
 RewriteEngine On
 
 <IfModule mod_rewrite.c>
-    RewriteCond %{REQUEST_FILENAME} -s [OR]
-    RewriteCond %{REQUEST_FILENAME} -l [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
-    RewriteRule ^(?!(Resources\/)).*$ - [NC,L]
-    RewriteRule ^(?!(Resources\/)).*$ index.php [NC,L]
+    RewriteCond %{REQUEST_URI} !^/Resources/
+    RewriteRule ^.*$ index.php [NC,L]
 
     RewriteCond %{QUERY_STRING} !version=latest
     RewriteRule \.(css|js|json|jpg|jpeg|webp|png|gif|svg|bmp|tiff|jfif|ico|sfw|woff|ttf|otf)$ - [E=SET_CACHE_HEADER:1]
@@ -43,6 +40,27 @@ RewriteEngine On
 </IfModule>
 
 <IfModule mod_headers.c>
+    Header set X-Frame-Options "DENY"
+    Header set X-Content-Type-Options "nosniff"
     Header set Cache-Control "max-age=86000, public" env=SET_CACHE_HEADER
     Header set Cache-Control "no-cache" env=NO_CACHE_HEADER
+</IfModule>
+
+<IfModule security2_module>
+    SecRuleEngine On
+    SecRequestBodyAccess On
+    SecResponseBodyAccess On
+    SecRequestBodyLimit 104857600
+    SecRequestBodyNoFilesLimit 1048576
+    SecRequestBodyInMemoryLimit 1048576
+    SecResponseBodyLimit 524288
+    SecResponseBodyLimitAction ProcessPartial
+    IncludeOptional /etc/modsecurity/*.conf
+
+    # OWASP CRS
+    Include /usr/share/modsecurity-crs/*.conf
+    Include /usr/share/modsecurity-crs/rules/*.conf
+
+    # Custom rules
+    SecRule REQUEST_HEADERS:Content-Length "@gt 104857600" "phase:1,deny,status:413,msg:'Payload too large'"
 </IfModule>
