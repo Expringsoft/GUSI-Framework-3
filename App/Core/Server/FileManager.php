@@ -612,11 +612,11 @@ class FileManager
 	 * @param bool $overwrite If true, the file will be overwritten if it already exists, false by default
 	 * @param array|null $allowedMimeTypes Allowed mime types, null by default (all types allowed)
 	 * @param bool $ignoreUsageCap If true, the app usage cap will be ignored, false by default
-	 * @return true if the file was uploaded successfully or throws an exception on failure.
+	 * @return bool true if the file was uploaded successfully or throws an exception on failure.
 	 * @throws SystemIOException if failed to upload file because of invalid file name, file type, file size, file already exists, or failed to move file
 	 * @throws StorageException if the disk does not have the minimum required space or the app disk usage exceeded (if ignoreUsageCap is false)
 	 */
-	public static function uploadFile(array $file, string $destination, int $maxFileSize = Configuration::MAX_UPLOAD_SIZE_MB, bool $overwrite = false, ?array $allowedMimeTypes = null, bool $ignoreUsageCap = false): true {
+	public static function uploadFile(array $file, string $destination, int $maxFileSize = Configuration::MAX_UPLOAD_SIZE_MB, bool $overwrite = false, ?array $allowedMimeTypes = null, bool $ignoreUsageCap = false): bool {
 		if (!self::isMinimumDiskSpaceAvailable()) {
 			throw new StorageException("Could not perform this action: Minimum disk space not available", self::ERR_NO_MINIMUM_STORAGE_SPACE);
 		}
