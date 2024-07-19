@@ -41,7 +41,6 @@ RewriteEngine On
 
 <IfModule mod_headers.c>
     Header set X-Frame-Options "DENY"
-    Header set X-Content-Type-Options "nosniff"
     Header set Cache-Control "max-age=86000, public" env=SET_CACHE_HEADER
     Header set Cache-Control "no-cache" env=NO_CACHE_HEADER
 </IfModule>
