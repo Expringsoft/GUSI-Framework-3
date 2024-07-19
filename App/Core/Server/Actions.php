@@ -107,17 +107,17 @@ class Actions
 
 	public static function printScript($NombreArchivo)
 	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . 'Resources/Scripts/' . $NombreArchivo . SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION;
+		return Configuration::APP_ROOT_PATH . self::getRootURL() . Configuration::RESOURCES_PATH . 'Scripts/' . $NombreArchivo . SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION;
 	}
 
 	public static function printCSS($NombreArchivo)
 	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . 'Resources/Styles/' . $NombreArchivo . SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION;
+		return Configuration::APP_ROOT_PATH . self::getRootURL() . Configuration::RESOURCES_PATH . 'Styles/' . $NombreArchivo . SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION;
 	}
 
 	public static function printResource($Route, $printVersion = false)
 	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . 'Resources/' . $Route . ($printVersion ? SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION : "");
+		return Configuration::APP_ROOT_PATH . self::getRootURL() . Configuration::RESOURCES_PATH . $Route . ($printVersion ? SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION : "");
 	}
 
 	public static function printFile($Route, $printVersion = false)

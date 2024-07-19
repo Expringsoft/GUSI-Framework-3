@@ -165,4 +165,13 @@ class Configuration
     public const DB_PASSWORD_ENV_VAR = "GUSI_FRAMEWORK_DB_PASSWORD";
 
     #endregion
+
+    #region Resource configuration
+
+    /**
+     * The path to the resources folder.
+     */
+    public const RESOURCES_PATH = "Resources/";
+
+    #endregion
 }
