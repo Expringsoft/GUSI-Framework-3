@@ -9,8 +9,10 @@ use App\Core\Server\Actions;
 use App\Core\Server\Logger;
 use App\Core\Server\Router;
 use App\Core\Server\Session;
-use App\Modules\Index\APIs_Module;
-use App\Modules\Index\Index_Module;
+use DirectoryIterator;
+use ReflectionClass;
+use ReflectionException;
+use Exception;
 
 /**
  * The main application class responsible for initializing the application and handling exceptions.
@@ -48,12 +50,77 @@ class App
 	}
 
 	/**
-	 * Loads the modules by registering their routes.
+	 * Loads modules from the App/Modules directory.
 	 */
 	private function loadModules()
 	{
-		Index_Module::registerRoutes();
-		APIs_Module::registerRoutes();
+		$this->loadModulesFromDirectory('App/Modules');
+	}
+
+	/**
+	 * Recursively loads modules from a directory and registers their routes.
+	 *
+	 * @param string $directory The directory to load modules from.
+	 */
+	private function loadModulesFromDirectory($directory)
+	{
+		$iterator = new DirectoryIterator($directory);
+		foreach ($iterator as $fileinfo) {
+			if ($fileinfo->isDot()) {
+				continue;
+			}
+			if ($fileinfo->isDir()) {
+				$this->loadModulesFromDirectory($fileinfo->getPathname());
+			} elseif ($fileinfo->isFile() && $fileinfo->getExtension() === 'php') {
+				$this->registerModuleRoutes($fileinfo->getPathname());
+			}
+		}
+	}
+
+	/**
+	 * Registers the routes for a module.
+	 *
+	 * @param string $filePath The file path of the module.
+	 */
+	private function registerModuleRoutes($filePath)
+	{
+		$className = $this->getClassNameFromFilePath($filePath);
+		if (class_exists($className)) {
+			try {
+				$reflectionClass = new ReflectionClass($className);
+				if ($reflectionClass->hasMethod('registerRoutes')) {
+					$reflectionClass->getMethod('registerRoutes')->invoke(null);
+				} else {
+					Logger::LogError(self::class, "Method 'registerRoutes' not found in Module $className");
+				}
+			} catch (ReflectionException $e) {
+				Logger::LogError(self::class, "Reflection error: " . $e->getMessage());
+			} catch (Exception $e) {
+				Logger::LogError(self::class, "Error invoking 'registerRoutes' in Module $className: " . $e->getMessage());
+			}
+		} else {
+			Logger::LogError(self::class, "Module $className not found");
+		}
+	}
+
+	/**
+	 * Converts a file path to a fully qualified class name.
+	 *
+	 * @param string $filePath The file path.
+	 * @return string The fully qualified class name.
+	 */
+	private function getClassNameFromFilePath($filePath)
+	{
+		// Get the relative path of the file
+		$relativePath = str_replace([realpath(__DIR__ . '/../../Modules') . DIRECTORY_SEPARATOR, '.php'], '', realpath($filePath));
+
+		// Replace directory separators with namespace separators
+		$relativePath = str_replace(DIRECTORY_SEPARATOR, '\\', $relativePath);
+
+		// Build the fully qualified class name
+		$className = 'App\\Modules\\' . $relativePath;
+
+		return $className;
 	}
 
 	/**

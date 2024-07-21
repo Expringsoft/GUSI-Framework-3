@@ -12,7 +12,6 @@ final class Cryptography
 {
 
 	protected $isAvailable = false;
-	protected const PARTIAL_KEY = "dW5kZWZpbmVk";
 	protected const CIPHER_METHOD = 'aes-256-gcm';
 	protected const TAG_LENGTH = 16;
 
@@ -80,21 +79,18 @@ final class Cryptography
 	 * Generates or retrieves the encryption key.
 	 *
 	 * @return string The encryption key.
-	 * @throws CryptographyException If the OpenSSL extension is not available.
+	 * @throws CryptographyException If the OpenSSL extension is not available or the encryption key is not defined.
 	 */
 	protected function getEncryptionKey()
 	{
 		$this->validateAvailability();
 
-		// Check if an encryption key is defined as an environment variable
 		$envKey = getenv(Configuration::ENV_CRYPTOGRAPHY_KEY_NAME);
 		if ($envKey !== false) {
 			return $envKey;
+		} else {
+			throw new CryptographyException('Encryption key not defined.');
 		}
-
-		// If no environment variable is defined, generate the key
-		$fingerprint = [php_uname(), hash('sha256', filectime('/')), phpversion(), base64_decode(self::PARTIAL_KEY)];
-		return hash('sha256', implode('@', $fingerprint));
 	}
 
 	/**

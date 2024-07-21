@@ -22,4 +22,10 @@ class Home extends Controller
 	{
 		return self::getParentModule()::getChannel();
 	}
+
+	public function favicon()
+	{
+		$this->setHeader('Content-Type', 'image/x-icon');
+		echo file_get_contents('Resources/Images/favicon.ico');
+	}
 }
