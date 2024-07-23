@@ -41,9 +41,8 @@ class CacheManager {
 	 * Gets the cache data for the specified key.
 	 * 
 	 * @param string $key The cache key.
-	 * @return mixed|false The cache data if the cache is valid, false otherwise.
 	 */
-	public static function getCache($key): mixed|false {
+	public static function getCache($key) {
 		if (self::isCacheValid($key)) {
 			$cacheFile = Configuration::CACHE_FOLDER . md5($key) . Configuration::CACHE_FILE_EXTENSION;
 			$data = unserialize(file_get_contents($cacheFile));
