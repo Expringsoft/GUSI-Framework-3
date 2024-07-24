@@ -46,7 +46,30 @@ class App
 	private function init()
 	{
 		$this->loadModules();
+		$this->loadEnvironmentVariables();
 		Router::getInstance()->handleRequest();
+	}
+
+	/**
+	 * Loads environment variables from the .env file.
+	 */
+	private function loadEnvironmentVariables(){
+		if (file_exists('.env')) {
+			$envData = file_get_contents('.env');
+			$envLines = explode("\n", $envData);
+			foreach ($envLines as $line) {
+				$line = trim($line);
+				if (empty($line) || strpos($line, '#') === 0) {
+					continue;
+				}
+				$parts = explode('=', $line, 2);
+				if (count($parts) === 2) {
+					$key = trim($parts[0]);
+					$value = trim($parts[1]);
+					putenv("$key=$value");
+				}
+			}
+		}
 	}
 
 	/**

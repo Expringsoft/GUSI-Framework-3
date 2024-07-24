@@ -25,6 +25,11 @@
     AddOutputFilterByType DEFLATE text/xml
 </IfModule>
 
+<FilesMatch "^\.env$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
 Options -Indexes
 RewriteEngine On
 

@@ -1,3 +1,6 @@
+# Ignore .env files
+.env
+
 # Ignore .log debug files in App/Logs/Debug
 App/Logs/Debug/*.log
 
