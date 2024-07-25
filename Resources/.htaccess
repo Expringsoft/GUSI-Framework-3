@@ -1,4 +1,4 @@
-<FilesMatch "\.(php|php3|php4|php5|phtml|phar|pl|cgi|py|rb|erb|asp|aspx|jsp|jspx|jsw|jsv|jspf|sh|bash|zsh|ksh|exe|bat|cmd|com|msi|vbs|vbe|js|jse|wsf|wsh|htaccess|htpasswd|ps1|psm1|psd1|sql|jar)$">
+<FilesMatch "\.(php|php3|php4|php5|phtml|phar|pl|cgi|py|rb|erb|asp|aspx|jsp|jspx|jsw|jsv|jspf|sh|bash|zsh|ksh|exe|bat|cmd|com|msi|vbs|vbe|jse|wsf|wsh|htaccess|htpasswd|ps1|psm1|psd1|sql|jar)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
