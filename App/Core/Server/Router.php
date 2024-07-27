@@ -115,6 +115,7 @@ class Router extends SingletonInstance
 			'/duckduckbot/i'						=> 'DuckDuckGo Bot',
 			'/duckassistbot/i'						=> 'DuckAssistBot',
 			'/facebookexternalhit/i'				=> 'Facebook Bot (External Hit)',
+			'/whatsapp/'							=> 'WhatsApp (Link Preview)',
 			'/facebookbot/i'						=> 'Facebook Bot',
 			'/telegrambot/i'						=> 'Telegram Bot',
 			'/twitterbot/i'							=> 'Twitter Bot',
