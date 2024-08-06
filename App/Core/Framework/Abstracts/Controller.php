@@ -8,6 +8,7 @@ use App\Core\Server\Actions;
 use App\Core\Framework\Enumerables\RenderOptions;
 use App\Core\Framework\Interfaces\Controllable;
 use App\Core\Framework\Abstracts\Channel;
+use App\Core\Exceptions\ViewException;
 use App\Core\Server\Logger;
 use InvalidArgumentException;
 use PDOException;
@@ -28,6 +29,13 @@ abstract class Controller extends Channel implements Controllable
 		$RenderOption = RenderOptions::DEFAULT;
 		try {
 			$this->$Method(...$args);
+		} catch (ViewException $ve) {
+			$RenderOption = RenderOptions::ERROR;
+			$Message = $ve->getMessage() . ".\nStack:\n" . $ve->getTraceAsString() . ".\n■ Line: " . $ve->getLine() . ', on: ' . $ve->getFile();
+			$thCode = $ve->getCode();
+			if (Configuration::LOG_ERRORS) {
+				Logger::LogError(self::class, "[{$thCode}]: {$Message}");
+			}
 		} catch (\Throwable $th) {
 			$RenderOption = RenderOptions::ERROR;
 			$Message = $th->getMessage() . ".\nStack:\n" . $th->getTraceAsString() . ".\n■ Line: " . $th->getLine() . ', on: ' . $th->getFile();
