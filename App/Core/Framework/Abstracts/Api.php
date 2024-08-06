@@ -24,6 +24,8 @@ abstract class Api extends Channel
 		$this->setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 		$this->setHeader("Access-Control-Max-Age", "600");
 
+		$this->Response = new APIResponse(SharedConsts::HTTP_RESPONSE_NO_CONTENT, Actions::printLocalized(Strings::OPERATION_NO_RESULTS));
+		
 		try {
 			$this->$Method(...$args);
 		} catch (\Throwable $th) {
