@@ -14,6 +14,36 @@ abstract class Model implements Modelable
 	public abstract static function primaryKey(): string;
 
 	/**
+	 * Converts an array to a model
+	 * @param array $data The data to convert to a model.
+	 * @return static
+	 */
+	public static function fromArray(array $data): static
+	{
+		$Model = new static();
+		foreach ($data as $key => $value) {
+			$Model->$key = $value;
+		}
+		return $Model;
+	}
+
+	/**
+	 * Counts the records in the table of the model
+	 * @param array $columns The columns to count, defaults to [['*', 'COUNT']]. Syntax: [['column', 'alias'], ['column', 'alias']]
+	 * @return QueryBuilder
+	 */
+	public static function count(array $columns = [['*', 'COUNT']]): QueryBuilder
+	{
+		$Query = new QueryBuilder();
+		$namedColumns = [];
+		foreach ($columns as $column) {
+			$namedColumns[] = "COUNT(" . $column[0] . ") AS " . $column[1];
+		}
+		$Query->select(static::table(), $namedColumns);
+		return $Query;
+	}
+
+	/**
 	 * Gets all records from the table of the model and return them as a Collection
 	 * @return Collection
 	 */
@@ -56,6 +86,18 @@ abstract class Model implements Modelable
 		$Query = new QueryBuilder();
 		$Query->insert(static::table(), $data);
 		return $Query->execute();
+	}
+
+	/**
+	 * Inserts records into the table of the model
+	 * @param array $data The data to insert into the table.
+	 * @return QueryBuilder
+	 */
+	public static function insert(array $data): QueryBuilder
+	{
+		$Query = new QueryBuilder();
+		$Query->insert(static::table(), $data);
+		return $Query;
 	}
 
 	/**

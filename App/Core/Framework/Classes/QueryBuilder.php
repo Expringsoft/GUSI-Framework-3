@@ -193,6 +193,38 @@ class QueryBuilder
 	}
 
 	/**
+	 * Makes a keyword search on the specified columns with the given search string and a maximum number of keywords.
+	 * The search string is split into keywords and each keyword is searched for in the specified columns.
+	 * WARNING: As this method searches for each keyword in each column, it can be slow for large datasets and/or large number of keywords and columns.
+	 * 
+	 * @param array $columns The columns to search in.
+	 * @param string $search The search string.
+	 * @param int $maxKeywords The maximum number of keywords to search for.
+	 * @return $this The QueryBuilder instance.
+	 */
+	public function keyWordSearch(array $columns, string $search, int $maxKeywords = 5)
+	{
+		$keywords = explode(' ', $search);
+		$keywords = array_slice($keywords, 0, $maxKeywords);
+		$conditions = [];
+		$params = [];
+
+		foreach ($columns as $column) {
+			$columnConditions = [];
+			foreach ($keywords as $keyword) {
+				$columnConditions[] = "$column LIKE ?";
+				$params[] = '%' . $keyword . '%';
+			}
+			$conditions[] = '(' . implode(' OR ', $columnConditions) . ')';
+		}
+
+		$this->queryParts['where'][] = ' WHERE ' . implode(' OR ', $conditions);
+		$this->params = array_merge($this->params, $params);
+
+		return $this;
+	}
+
+	/**
 	 * Adds a GROUP BY clause to the query.
 	 *
 	 * @param array $columns The columns to group by.

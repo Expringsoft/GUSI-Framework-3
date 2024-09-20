@@ -104,7 +104,14 @@ class DatabaseResult
 		return $Collection;
 	}
 
-	public function __toArrayModel(string $modelClass){
+	/**
+	 * Converts the DatabaseResult object to a Collection of models.
+	 *
+	 * @param string $modelClass The class of the model to convert the data to.
+	 * @return Collection Collection of models.
+	 */
+	public function __toCollectionModel(string $modelClass): Collection
+	{
 		$Collection = new Collection();
 		foreach ($this->fetch as $Row) {
 			$Model = new $modelClass();
@@ -114,5 +121,24 @@ class DatabaseResult
 			$Collection->addElement($Model);
 		}
 		return $Collection;
+	}
+
+	/**
+	 * Converts the DatabaseResult object to an array of models.
+	 *
+	 * @param string $modelClass The class of the model to convert the data to.
+	 * @return array Array of models.
+	 */
+	public function __toArrayModel(string $modelClass): array
+	{
+		$Models = [];
+		foreach ($this->fetch as $Row) {
+			$Model = new $modelClass();
+			foreach ($Row as $Key => $Value) {
+				$Model->$Key = $Value;
+			}
+			$Models[] = $Model;
+		}
+		return $Models;
 	}
 }
