@@ -93,4 +93,14 @@ abstract class Api extends Channel
 		}
 		return true;
 	}
+
+	public function retrieveGETParameter(string $Key)
+	{
+		return Router::getInstance()->getParameters()['GET'][$Key];
+	}
+
+	public function retrievePOSTParameter(string $Key)
+	{
+		return Router::getInstance()->getParameters()['POST'][$Key];
+	}
 }
