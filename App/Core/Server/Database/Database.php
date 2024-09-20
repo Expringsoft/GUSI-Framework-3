@@ -12,6 +12,7 @@ use App\Core\Server\Logger;
 use PDOException;
 use PDO;
 use PDOStatement;
+use App\Core\Server\Environment;
 
 class Database
 {
@@ -24,11 +25,11 @@ class Database
 	 */
 	public function __construct()
 	{
-		$Host = Configuration::DB_HOST;
-		$Port = Configuration::DB_PORT;
-		$User = getenv(Configuration::DB_USER_ENV_VAR);
-		$Password = getenv(Configuration::DB_PASSWORD_ENV_VAR);
-		$Database = Configuration::DB_NAME;
+		$Host = Environment::getInstance()->getEnvironmentVariable(Configuration::DB_HOST_ENV_VAR);
+		$Port = Environment::getInstance()->getEnvironmentVariable(Configuration::DB_PORT_ENV_VAR);
+		$User = Environment::getInstance()->getEnvironmentVariable(Configuration::DB_USER_ENV_VAR);
+		$Password = Environment::getInstance()->getEnvironmentVariable(Configuration::DB_PASSWORD_ENV_VAR);
+		$Database = Environment::getInstance()->getEnvironmentVariable(Configuration::DB_NAME_ENV_VAR);
 		$Charset = Configuration::DB_CHARSET;
 		$DSN = "mysql:host={$Host};port={$Port};dbname={$Database};charset={$Charset}";	
 		
@@ -196,14 +197,15 @@ class Database
 	 * Executes a stored procedure with the given parameters.
 	 *
 	 * @param string $procedure The name of the stored procedure to execute.
+	 * @param int $totalParams The total number of parameters the stored procedure has.
 	 * @param array $params An optional array of parameters to bind to the stored procedure.
 	 * @return DatabaseResult The result of the stored procedure execution.
 	 */
-	public function executeProcedure(string $procedure, array $params = []): DatabaseResult
+	public function executeProcedure(string $procedure, int $totalParams, array $params = []): DatabaseResult
 	{
 		$Operation = new DatabaseResult(false, "-1", Actions::printLocalized(Strings::DATABASE_STATEMENT_NOT_PERFORMED), 0);
 		try {
-			$Query = $this->connection->prepare("CALL $procedure");
+			$Query = $this->connection->prepare("CALL $procedure(" . str_repeat("?,", $totalParams - 1) . "?)");
 			$Query->execute($params);
 			$Operation->fetch = $Query->fetchAll();
 			$Operation->rowCount = $Query->rowCount();

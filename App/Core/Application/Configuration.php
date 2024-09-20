@@ -15,21 +15,25 @@ class Configuration
     public const APP_VERSION = "0.0.0-dev1";
 
     /**
-     * The URL path of the application.
-     * On production replace with the actual URL (domain) with / at the end.
+     * The URL path where is located the application locally.
      */
     public const PATH_URL = "/";
 
     /**
-     * The root path of the application.
-     * Used by Actions class to redirect to the root of the application for dynamic URLs.
+     * The domain of the application (without the protocol, ending with a slash).
      */
-    public const APP_ROOT_PATH = "//";
+    public const APP_DOMAIN = "gusi-framework.local/";
 
     /**
      * The default language code for default lang file.
      */
     public const APP_LANG_DISPLAY = "en";
+
+    /**
+     * The application timezone used by all date/time functions.
+     * See supported list on: https://www.php.net/manual/en/timezones.php
+     */
+    public const APP_TIMEZONE = "America/New_York";
 
     /**
      * The name of environment variable which stores encryption key for the application.
@@ -137,17 +141,17 @@ class Configuration
     /**
      * The database host.
      */
-    public const DB_HOST = "localhost";
+    public const DB_HOST_ENV_VAR = "GUSI_FRAMEWORK_DB_HOST";
 
     /**
      * The database port.
      */
-    public const DB_PORT = 3306;
+    public const DB_PORT_ENV_VAR = "GUSI_FRAMEWORK_DB_PORT";
 
     /**
      * The database name.
      */
-    public const DB_NAME = "gusi-framework";
+    public const DB_NAME_ENV_VAR = "GUSI_FRAMEWORK_DB_NAME";
 
     /**
      * The database charset.
@@ -172,6 +176,16 @@ class Configuration
      * The path to the resources folder.
      */
     public const RESOURCES_PATH = "Resources/";
+
+    /**
+     * The maximum resource size in megabytes.
+     */
+    public const MAX_RESOURCE_SIZE_MB = 15;
+
+    /**
+     * Time in Unix Timestamp at which the resource will be stored in cache
+     */
+    public const RESOURCE_CACHE_TIME = 31536000;
 
     #endregion
 }

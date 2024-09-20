@@ -32,6 +32,7 @@
   "OPERATION_UNSOLVED": "The requested operation could not be completed.",
   "REGEX_FAILED": "The value provided does not meet the established criteria",
   "REQUEST_UNDEFINED": "Invalid or undefined request.",
+  "RESOURCE_NOT_FOUND": "Resource not found.",
   "SUCCESSFUL_LOGIN": "Successfully logged in.",
   "UNKNOW_ACTION": "Unrecognized action.",
   "UNSUCCESSFUL_LOGIN": "Failed to log in, please check the information provided, an incorrect password or credentials may have been entered."

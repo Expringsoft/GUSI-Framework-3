@@ -4,6 +4,7 @@ namespace App\Core\Framework\Security;
 
 use App\Core\Application\Configuration;
 use App\Core\Exceptions\CryptographyException;
+use App\Core\Server\Environment;
 
 /**
  * The Cryptography class provides methods for encrypting and decrypting data using OpenSSL.
@@ -85,7 +86,7 @@ final class Cryptography
 	{
 		$this->validateAvailability();
 
-		$envKey = getenv(Configuration::ENV_CRYPTOGRAPHY_KEY_NAME);
+		$envKey = Environment::getInstance()->getEnvironmentVariable(Configuration::ENV_CRYPTOGRAPHY_KEY_NAME);
 		if ($envKey !== false) {
 			return $envKey;
 		} else {

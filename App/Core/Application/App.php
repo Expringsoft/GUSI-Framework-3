@@ -46,30 +46,7 @@ class App
 	private function init()
 	{
 		$this->loadModules();
-		$this->loadEnvironmentVariables();
 		Router::getInstance()->handleRequest();
-	}
-
-	/**
-	 * Loads environment variables from the .env file.
-	 */
-	private function loadEnvironmentVariables(){
-		if (file_exists('.env')) {
-			$envData = file_get_contents('.env');
-			$envLines = explode("\n", $envData);
-			foreach ($envLines as $line) {
-				$line = trim($line);
-				if (empty($line) || strpos($line, '#') === 0) {
-					continue;
-				}
-				$parts = explode('=', $line, 2);
-				if (count($parts) === 2) {
-					$key = trim($parts[0]);
-					$value = trim($parts[1]);
-					putenv("$key=$value");
-				}
-			}
-		}
 	}
 
 	/**
@@ -162,7 +139,7 @@ class App
 			$exceptionLine = $exception->getLine();
 			$exceptionTrace = $exception->getTraceAsString();
 
-			$exceptionData = "$exceptionMessage\nFile: $exceptionFile\nLine: $exceptionLine\nTrace: $exceptionTrace";
+			$exceptionData = "$exceptionMessage\nFile: $exceptionFile\nLine: $exceptionLine\nTrace: $exceptionTrace\nProcessID: " . getmypid();
 
 			Logger::LogError("AppExceptionHandler", $exceptionData);
 		}
@@ -191,7 +168,7 @@ class App
 	public function AppErrorHandler($errorNumber, $errorMessage, $errorFile, $errorLine)
 	{
 		if (Configuration::AUTOLOG_ERRORS) {
-			$errorData = "\nError: $errorNumber\nMessage: $errorMessage\nFile: $errorFile\nLine: $errorLine";
+			$errorData = "\nError: $errorNumber\nMessage: $errorMessage\nFile: $errorFile\nLine: $errorLine\nProcessID: " . getmypid();
 			Logger::LogError("AppErrorHandler", $errorData);
 		}
 		try {

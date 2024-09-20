@@ -10,8 +10,9 @@ class Session{
 	/**
 	 * Starts the session if it is not already active and regenerates the session ID.
 	 */
-	public static function start(){
-		if (self::getStatus() == PHP_SESSION_ACTIVE) {
+	public static function start()
+	{
+		if (self::getStatus() != PHP_SESSION_ACTIVE) {
 			session_start();
 			self::regenerate();
 		}
@@ -40,13 +41,25 @@ class Session{
 	}
 
 	/**
-	 * Checks if a session variable is set.
+	 * Checks if a session variable is set and not null.
 	 *
 	 * @param string $key The key to check.
 	 * @return bool Returns true if the session variable is set, false otherwise.
 	 */
-	public static function isset($key): bool{
-		return isset($_SESSION[$key]);
+	public static function isset($key): bool
+	{
+		if (is_array($key)) {
+			$session = $_SESSION;
+			foreach ($key as $segment) {
+				if (!isset($session[$segment])) {
+					return false;
+				}
+				$session = $session[$segment];
+			}
+			return true;
+		} else {
+			return isset($_SESSION[$key]) && $_SESSION[$key] !== null;
+		}
 	}
 
 	/**
@@ -61,7 +74,7 @@ class Session{
 			$session = $_SESSION;
 			foreach ($key as $segment) {
 				if (!isset($session[$segment])) {
-					Logger::LogWarning(self::class, "The session key '{$segment}' does not exist.");
+					Logger::LogWarning(self::class, "The session key segment '{$segment}' does not exist.");
 					return null;
 				}
 				$session = $session[$segment];
@@ -116,8 +129,20 @@ class Session{
 	 * @param string $key The key to check.
 	 * @return bool Returns true if the session variable exists, false otherwise.
 	 */
-	public static function exists($key){
-		return isset($_SESSION[$key]);
+	public static function exists($key)
+	{
+		if (is_array($key)) {
+			$session = $_SESSION;
+			foreach ($key as $segment) {
+				if (!isset($session[$segment])) {
+					return false;
+				}
+				$session = $session[$segment];
+			}
+			return true;
+		} else {
+			return isset($_SESSION[$key]);
+		}
 	}
 
 	/**

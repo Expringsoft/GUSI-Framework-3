@@ -54,6 +54,8 @@ class Strings{
 
 	public const REGEX_FAILED = "REGEX_FAILED";
 
+	public const RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND";
+
 	public const SUCCESSFUL_LOGIN = "SUCCESSFUL_LOGIN";
 
 	public const UNKNOW_ACTION = 'UNKNOW_ACTION';

@@ -5,6 +5,7 @@ namespace App\Core\Server;
 use App\Core\Application\Configuration;
 use App\Core\Framework\Abstracts\SingletonInstance;
 use InvalidArgumentException;
+use PSpell\Config;
 
 /**
  * Class Router
@@ -76,12 +77,12 @@ class Router extends SingletonInstance
 	 */
 	public function setBaseUrl()
 	{
-		if (Configuration::LOCAL_ENVIRONMENT) {
-			$this->baseUrl = Configuration::PATH_URL;
+		$Protocol = self::isContextSecure() ? "https://" : "http://";
+		if(Configuration::LOCAL_ENVIRONMENT){
+			$this->baseUrl = $Protocol . $_SERVER['SERVER_NAME'] . Configuration::PATH_URL;
 		} else {
-			$this->baseUrl = "{$_SERVER['SERVER_NAME']}/";
+			$this->baseUrl = $Protocol . Configuration::APP_DOMAIN;
 		}
-		return $this;
 	}
 
 	/**
@@ -93,80 +94,85 @@ class Router extends SingletonInstance
 	public static function getOSFromUserAgent(string $UserAgent = null)
 	{
 		$os = "Unknown";
-		$user_agent = null;
 
-		if ($UserAgent == null) {
-			if (!isset($_SERVER['HTTP_USER_AGENT'])) {
-				return $os;
-			}
-			$user_agent = $_SERVER['HTTP_USER_AGENT'];
-		} else {
-			$user_agent = $UserAgent;
+		if ($UserAgent === null) {
+			$UserAgent = $_SERVER['HTTP_USER_AGENT'] ?? $os;
 		}
 
 		$os_array = array(
-			'/googlebot-mobile/i'					=> 'Googlebot Mobile',
-			'/googlebot/i'							=> 'Googlebot',
-			'/bingbot/i'							=> 'Bingbot',
-			'/msnbot/i'								=> 'MSNbot',
-			'/grapeshotcrawler/i'					=> 'Grapeshot Crawler Bot',
-			'/yandexbot/i'							=> 'Yandexbot',
-			'/baiduspider/i'						=> 'Baiduspider Bot',
-			'/duckduckbot/i'						=> 'DuckDuckGo Bot',
-			'/duckassistbot/i'						=> 'DuckAssistBot',
-			'/facebookexternalhit/i'				=> 'Facebook Bot (External Hit)',
-			'/whatsapp/'							=> 'WhatsApp (Link Preview)',
-			'/facebookbot/i'						=> 'Facebook Bot',
-			'/telegrambot/i'						=> 'Telegram Bot',
-			'/twitterbot/i'							=> 'Twitter Bot',
-			'/discordbot/i'							=> 'Discord Bot',
-			'/linkedinbot/i'						=> 'LinkedIn Bot',
-			'/pinterestbot/i'						=> 'Pinterest Bot',
-			'/slackbot-linkexpanding/i'				=> 'Slack Bot (Link Expanding)',
-			'/slackbot-linkpreview/i'				=> 'Slack Bot (Link Preview)',
-			'/slackbot/i'							=> 'Slack Bot',
-			'/applebot/i'							=> 'Apple Bot',
-			'/yahoo! slurp/i'						=> 'Yahoo! Slurp Bot',
-			'/ia_archiver/i'						=> 'Alexa Bot',
-			'/archive.org_bot/i'					=> 'Archive.org Bot',
-			'/adobeair/i'							=> 'Adobe AIR',
-			'/windows phone(?: ([0-9.,_]+))?/i'		=> 'Windows Phone$1',
-			'/windows nt 10/i'						=> 'Windows 10',
-			'/windows nt 6.3/i'						=> 'Windows 8.1',
-			'/windows nt 6.2/i'						=> 'Windows 8',
-			'/windows nt 6.1/i'						=> 'Windows 7',
-			'/windows nt 6.0/i'						=> 'Windows Vista',
-			'/windows nt 5.2/i'						=> 'Windows Server 2003/XP x64',
-			'/windows nt 5.1/i'						=> 'Windows XP',
-			'/windows xp/i'							=> 'Windows XP',
-			'/windows nt 5.0/i'						=> 'Windows 2000',
-			'/windows me/i'							=> 'Windows ME',
-			'/win98/i'								=> 'Windows 98',
-			'/win95/i'								=> 'Windows 95',
-			'/win16/i'								=> 'Windows 3.11',
-			'/iphone(?: ([0-9.,_]+))?/i'			=> 'iPhone$1',
-			'/macintosh|mac os x/i'					=> 'Mac OS X',
-			'/mac_powerpc/i'						=> 'Mac OS 9',
-			'/cros x86_64/i'						=> 'Chrome OS x64',
-			'/cros armv7l/i'						=> 'Chrome OS ARM',
-			'/cros aarch64/i'						=> 'Chrome OS ARM64',
-			'/android(?: ([0-9.]+))?/i'				=> 'Android$1',
-			'/freebsd/i'							=> 'FreeBSD',
-			'/linux/i'								=> 'Linux',
-			'/ubuntu/i'								=> 'Ubuntu',
-			'/ipod/i'								=> 'iPod',
-			'/ipad/i'								=> 'iPad',
-			'/blackberry/i'							=> 'BlackBerry',
-			'/webos/i'								=> 'Mobile'
+			// Bots
+			'/googlebot-mobile/i'       => 'Googlebot Mobile',
+			'/googlebot/i'              => 'Googlebot',
+			'/bingbot/i'                => 'Bingbot',
+			'/msnbot/i'                 => 'MSNbot',
+			'/grapeshotcrawler/i'       => 'Grapeshot Crawler Bot',
+			'/yandexbot/i'              => 'Yandexbot',
+			'/baiduspider/i'            => 'Baiduspider Bot',
+			'/duckduckbot/i'            => 'DuckDuckGo Bot',
+			'/duckassistbot/i'          => 'DuckAssistBot',
+			'/facebookexternalhit/i'    => 'Facebook Bot (External Hit)',
+			'/facebookbot/i'            => 'Facebook Bot',
+			'/telegrambot/i'            => 'Telegram Bot',
+			'/twitterbot/i'             => 'Twitter Bot',
+			'/discordbot/i'             => 'Discord Bot',
+			'/linkedinbot/i'            => 'LinkedIn Bot',
+			'/pinterestbot/i'           => 'Pinterest Bot',
+			'/slackbot/i'               => 'Slack Bot',
+			'/applebot/i'               => 'Apple Bot',
+			'/yahoo! slurp/i'           => 'Yahoo! Slurp Bot',
+			'/ia_archiver/i'            => 'Alexa Bot',
+			'/archive.org_bot/i'        => 'Archive.org Bot',
+			// Windows
+			'/windows nt 10/i'          => 'Windows 10',
+			'/windows nt 6.3/i'         => 'Windows 8.1',
+			'/windows nt 6.2/i'         => 'Windows 8',
+			'/windows nt 6.1/i'         => 'Windows 7',
+			'/windows nt 6.0/i'         => 'Windows Vista',
+			'/windows nt 5.2/i'         => 'Windows Server 2003/XP x64',
+			'/windows nt 5.1/i'         => 'Windows XP',
+			'/windows xp/i'             => 'Windows XP',
+			'/windows nt 5.0/i'         => 'Windows 2000',
+			'/windows me/i'             => 'Windows ME',
+			'/win98/i'                  => 'Windows 98',
+			'/win95/i'                  => 'Windows 95',
+			'/win16/i'                  => 'Windows 3.11',
+			'/windows phone(?: ([0-9.,_]+))?/i' => 'Windows Phone$1',
+			// Apple
+			'/iphone(?: ([0-9.,_]+))?/i' => 'iPhone$1',
+			'/ipad/i'                   => 'iPad',
+			'/ipod/i'                   => 'iPod',
+			'/macintosh|mac os x 10_15/i' => 'macOS Catalina',
+			'/mac os x 10_16|mac os x 11/i' => 'macOS Big Sur',
+			'/mac os x 12/i'            => 'macOS Monterey',
+			'/mac os x 13/i'            => 'macOS Ventura',
+			'/macintosh|mac os x/i'     => 'Mac OS X',
+			'/mac_powerpc/i'            => 'Mac OS 9',
+			// Android and Chrome OS
+			'/android(?: ([0-9.]+))?/i' => 'Android$1',
+			'/cros x86_64/i'            => 'Chrome OS x64',
+			'/cros armv7l/i'            => 'Chrome OS ARM',
+			'/cros aarch64/i'           => 'Chrome OS ARM64',
+			// Linux and other Unix-like OS
+			'/ubuntu/i'                 => 'Ubuntu',
+			'/freebsd/i'                => 'FreeBSD',
+			'/linux/i'                  => 'Linux',
+			'/debian/i'                 => 'Debian',
+			'/centos/i'                 => 'CentOS',
+			'/fedora/i'                 => 'Fedora',
+			'/blackberry/i'             => 'BlackBerry',
+			'/webos/i'                  => 'Mobile',
+			// Others
+			'/adobeair/i'               => 'Adobe AIR'
 		);
 
 		foreach ($os_array as $regex => $value) {
-			if (preg_match($regex, $user_agent, $matches)) {
+			if (preg_match($regex, $UserAgent, $matches)) {
 				$os = str_replace('$1', isset($matches[1]) ? ' ' . $matches[1] : '', $value);
 				break;
 			}
 		}
 
+		// Especificar Windows 11 si se detecta a través del User-Agent Client Hints
 		if ($os == "Windows 10" && isset($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'])) {
 			if (version_compare($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'], "13", ">=")) {
 				$os = "Windows 11";
@@ -184,52 +190,50 @@ class Router extends SingletonInstance
 	 */
 	public static function getBrowserFromUserAgent(string $UserAgent = null)
 	{
-		$browser = "Unknown";
-		$user_agent = null;
-
-		if ($UserAgent == null) {
-			if (!isset($_SERVER['HTTP_USER_AGENT'])) {
-				return "Unknown";
-			}
-			$user_agent = $_SERVER['HTTP_USER_AGENT'];
-		} else {
-			$user_agent = $UserAgent;
+		if ($UserAgent === null) {
+			$UserAgent = $_SERVER['HTTP_USER_AGENT'] ?? "Unknown";
 		}
+		$browser = "Unknown";
 
 		$browser_array = array(
-			'/postmanruntime/i'	=> 'Postman API Platform',
-			'/trident\/4.0/i'	=> 'Internet Explorer 8',
-			'/trident\/5.0/i'	=> 'Internet Explorer 9',
-			'/trident\/6.0/i'	=> 'Internet Explorer 10',
-			'/trident\/7.0/i'	=> 'Internet Explorer 11',
-			'/trident/i'		=> 'Internet Explorer',
-			'/msie/i'			=> 'Internet Explorer',
-			'/duckduckgo/i'		=> 'DuckDuckGo',
-			'/edg/i'			=> 'Microsoft Edge',
-			'/edge/i'			=> 'Microsoft Edge',
-			'/msedge/i'			=> 'Microsoft Edge',
-			'/firefox/i'		=> 'Mozilla Firefox',
-			'/opera/i'			=> 'Opera',
-			'/opr/i'			=> 'Opera',
-			'/origin/i'			=> 'EA Origin',
-			'/netscape/i'		=> 'Netscape',
-			'/maxthon/i'		=> 'Maxthon',
-			'/konqueror/i'		=> 'Konqueror',
-			'/brave/i'			=> 'Brave',
-			'/vivaldi/i'		=> 'Vivaldi',
-			'/yabrowser/i'		=> 'Yandex',
-			'/yowser/i'			=> 'Yandex',
-			'/samsungbrowser/i'	=> 'Samsung Internet',
-			'/epic/i'			=> 'Epic',
-			'/maxthon/i'		=> 'Maxthon',
-			'/ucbrowser/i'		=> 'UC Browser',
-			'/chrome/i'			=> 'Chrome',
-			'/safari/i'			=> 'Safari',
-			'/mobile/i'			=> 'Mobile Device',
+			'/postmanruntime/i'     => 'Postman API Platform',
+			'/trident\/7.0/i'       => 'Internet Explorer 11',
+			'/trident\/6.0/i'       => 'Internet Explorer 10',
+			'/trident\/5.0/i'       => 'Internet Explorer 9',
+			'/trident\/4.0/i'       => 'Internet Explorer 8',
+			'/trident/i'            => 'Internet Explorer',
+			'/msie/i'               => 'Internet Explorer',
+			'/duckduckgo/i'         => 'DuckDuckGo',
+			'/edg/i'                => 'Microsoft Edge',
+			'/msedge/i'             => 'Microsoft Edge',
+			'/firefox/i'            => 'Mozilla Firefox',
+			'/opr\/gx/i'            => 'Opera GX',
+			'/opr/i'                => 'Opera',
+			'/opera/i'              => 'Opera',
+			'/origin/i'             => 'EA Origin',
+			'/netscape/i'           => 'Netscape',
+			'/maxthon/i'            => 'Maxthon',
+			'/konqueror/i'          => 'Konqueror',
+			'/brave/i'              => 'Brave',
+			'/vivaldi/i'            => 'Vivaldi',
+			'/yabrowser/i'          => 'Yandex',
+			'/yowser/i'             => 'Yandex',
+			'/samsungbrowser/i'     => 'Samsung Internet',
+			'/epic/i'               => 'Epic',
+			'/ucbrowser/i'          => 'UC Browser',
+			'/qqbrowser/i'          => 'QQ Browser',
+			'/baidubrowser/i'       => 'Baidu Browser',
+			'/palemoon/i'           => 'Pale Moon',
+			'/waterfox/i'           => 'Waterfox',
+			'/torbrowser/i'         => 'Tor Browser',
+			'/chromium/i'           => 'Chromium',
+			'/chrome/i'             => 'Chrome',
+			'/safari/i'             => 'Safari',
+			'/mobile/i'             => 'Mobile Device',
 		);
 
 		foreach ($browser_array as $regex => $value) {
-			if (preg_match($regex, $user_agent)) {
+			if (preg_match($regex, $UserAgent)) {
 				$browser = $value;
 				break;
 			}
@@ -246,29 +250,39 @@ class Router extends SingletonInstance
 	public static function getIPAddress()
 	{
 		try {
-			// Get the user's IP address
-			$ip_address = $_SERVER['REMOTE_ADDR'];
-
-			// Check for shared internet
-			if (array_key_exists('HTTP_CLIENT_IP', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_CLIENT_IP'];
-			} else if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
-			} else if (array_key_exists('HTTP_X_FORWARDED', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_X_FORWARDED'];
-			} else if (array_key_exists('HTTP_FORWARDED_FOR', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_FORWARDED_FOR'];
-			} else if (array_key_exists('HTTP_FORWARDED', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_FORWARDED'];
-			} else if (array_key_exists('HTTP_X_CLUSTER_CLIENT_IP', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
-			} else if (array_key_exists('HTTP_FORWARDED_FOR_IP', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_FORWARDED_FOR_IP'];
-			} else if (array_key_exists('HTTP_FORWARDED_IP', $_SERVER)) {
-				$ip_address = $_SERVER['HTTP_FORWARDED_IP'];
+			// Check if the REMOTE_ADDR is set
+			if (!isset($_SERVER['REMOTE_ADDR'])) {
+				return null;
 			}
 
-			return $ip_address;
+			// Get initial IP from REMOTE_ADDR
+			$ip_address = $_SERVER['REMOTE_ADDR'];
+
+			// List of possible headers that may contain the real IP address
+			$possible_headers = [
+				'HTTP_CLIENT_IP',
+				'HTTP_X_FORWARDED_FOR',
+				'HTTP_X_FORWARDED',
+				'HTTP_FORWARDED_FOR',
+				'HTTP_FORWARDED',
+				'HTTP_X_CLUSTER_CLIENT_IP',
+				'HTTP_FORWARDED_FOR_IP',
+				'HTTP_FORWARDED_IP'
+			];
+
+			foreach ($possible_headers as $header) {
+				if (array_key_exists($header, $_SERVER) && filter_var($_SERVER[$header], FILTER_VALIDATE_IP)) {
+					$ip_address = $_SERVER[$header];
+					break; // Break the loop if a valid IP is found
+				}
+			}
+
+			// Return the IP address if it is valid
+			if (filter_var($ip_address, FILTER_VALIDATE_IP)) {
+				return $ip_address;
+			}
+
+			return null;
 		} catch (\Exception $e) {
 			return null;
 		}
@@ -301,7 +315,7 @@ class Router extends SingletonInstance
 	 */
 	public function getBaseUrl()
 	{
-		return Configuration::LOCAL_ENVIRONMENT ? $_SERVER['SERVER_NAME'] . $this->baseUrl : $this->baseUrl;
+		return $this->baseUrl;
 	}
 
 	/**
@@ -463,6 +477,10 @@ class Router extends SingletonInstance
 			$parameters = [];
 			// Iterate through the route segments
 			for ($i = 0; $i < count($routeSegments); $i++) {
+				// Check if the segment is initialized before accessing it
+				if (!isset($routeSegments[$i][0]) || !isset($routeSegments[$i][-1])) {
+					continue 2; // Skip to the next route if the segment is not initialized
+				}
 				// Add to the parameters array if the route segment is a parameter defined by param name enclosed with {}
 				if ($routeSegments[$i][0] == '{' && $routeSegments[$i][-1] == '}') {
 					$parameters[trim($routeSegments[$i], '{}')] = $this->parameters['PATH_SEGMENTS'][$i];
@@ -480,5 +498,40 @@ class Router extends SingletonInstance
 
 		// Render a 404 page if no route matches the requested route
 		Actions::renderNotFound();
+	}
+
+	/**
+	 * Generates the router map YAML file.
+	 *
+	 * @return void
+	 */
+	public function generateRoutermap()
+	{
+		$groupedRoutes = [];
+
+		// Agrupar rutas por controlador
+		foreach ($this->routes as $route => $controller) {
+			$controllerName = $controller[0];
+			$methodName = $controller[1];
+			if (!isset($groupedRoutes[$controllerName])) {
+				$groupedRoutes[$controllerName] = [];
+			}
+			$groupedRoutes[$controllerName][] = ['route' => $route, 'method' => $methodName];
+		}
+
+		// Generar contenido YAML
+		$yamlContent = "Routermap:\n\n";
+		foreach ($groupedRoutes as $controller => $routes) {
+			$yamlContent .= "  {$controller}:\n";
+			foreach ($routes as $routeInfo) {
+				$yamlContent .= "    - route: {$routeInfo['route']} # {$routeInfo['method']}\n";
+			}
+		}
+
+		// Create the file name
+		$fileName = 'routermap_' . time() . '.yaml';
+
+		// Write the YAML content to the file
+		file_put_contents($fileName, $yamlContent);
 	}
 }

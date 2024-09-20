@@ -66,13 +66,16 @@ class FileManager
 		}
 		$size = filesize($file);
 		if ($size <= 0) {
-			if (!(strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')) {
-				$size = trim(`stat -c%s $file`);
-			} else {
-				$fsobj = new COM("Scripting.FileSystemObject");
-				$f = $fsobj->GetFile($file);
-				$size = $f->Size;
+			$handle = fopen($file, "rb");
+			if ($handle === false) {
+				Logger::LogWarning("FileManager", "Unable to open file: '{$file}'");
+				return false;
 			}
+			$size = 0;
+			while (!feof($handle)) {
+				$size += strlen(fread($handle, 8192));
+			}
+			fclose($handle);
 		}
 		return self::convertBytesTo($size, $returnType);
 	}

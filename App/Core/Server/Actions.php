@@ -11,6 +11,7 @@ use App\Core\Exceptions\ViewException;
 use LogicException;
 use InvalidArgumentException;
 use App\Core\Server\Logger;
+use App\Core\Framework\Classes\ResourceManager;
 
 class Actions
 {
@@ -21,7 +22,7 @@ class Actions
 
 	public static function rootRedirect($URL)
 	{
-		header('location: //' . self::getRootURL() . $URL);
+		header('location: ' . Router::getInstance()->getBaseUrl() . $URL);
 	}
 
 	public static function printLocalized($key)
@@ -100,33 +101,31 @@ class Actions
 		}
 	}
 
-	public static function getRootURL()
+	public static function printScript($fileName)
 	{
-		return Configuration::LOCAL_ENVIRONMENT ? $_SERVER['SERVER_NAME'] . Configuration::PATH_URL : Configuration::PATH_URL;
+		$fileName = ResourceManager::base_64_url_encode('Scripts/' . $fileName);
+		return Router::getInstance()->getBaseUrl() . 'public/' . Configuration::APP_VERSION . '/' . $fileName;
 	}
 
-	public static function printScript($NombreArchivo)
+	public static function printCSS($fileName)
 	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . Configuration::RESOURCES_PATH . 'Scripts/' . $NombreArchivo . SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION;
+		$fileName = ResourceManager::base_64_url_encode('Styles/' . $fileName);
+		return Router::getInstance()->getBaseUrl() . 'public/' . Configuration::APP_VERSION . '/' . $fileName;
 	}
 
-	public static function printCSS($NombreArchivo)
+	public static function printResource($Route)
 	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . Configuration::RESOURCES_PATH . 'Styles/' . $NombreArchivo . SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION;
-	}
-
-	public static function printResource($Route, $printVersion = false)
-	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . Configuration::RESOURCES_PATH . $Route . ($printVersion ? SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION : "");
+		$Route = ResourceManager::base_64_url_encode($Route);
+		return Router::getInstance()->getBaseUrl() . 'public/' . Configuration::APP_VERSION . '/' . $Route;
 	}
 
 	public static function printFile($Route, $printVersion = false)
 	{
-		return Configuration::APP_ROOT_PATH . self::getRootURL() . "Files/{$Route}" . ($printVersion ? SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION : "");
+		return Router::getInstance()->getBaseUrl() . Configuration::APP_STORAGE_FOLDER . $Route . ($printVersion ? SharedConsts::STR_VERSION_PARAM . Configuration::APP_VERSION : "");
 	}
 
 	public static function printRoute(?string $Route = null)
 	{
-		return  Configuration::APP_ROOT_PATH . self::getRootURL() . $Route;
+		return Router::getInstance()->getBaseUrl() . $Route;
 	}
 }

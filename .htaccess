@@ -16,6 +16,8 @@
     AddOutputFilterByType DEFLATE font/opentype
     AddOutputFilterByType DEFLATE font/otf
     AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE font/woff
+    AddOutputFilterByType DEFLATE font/woff2
     AddOutputFilterByType DEFLATE image/svg+xml
     AddOutputFilterByType DEFLATE image/x-icon
     AddOutputFilterByType DEFLATE text/css
@@ -34,14 +36,7 @@ Options -Indexes
 RewriteEngine On
 
 <IfModule mod_rewrite.c>
-    RewriteCond %{REQUEST_URI} !^/Resources/
     RewriteRule ^.*$ index.php [NC,L]
-
-    RewriteCond %{QUERY_STRING} !version=latest
-    RewriteRule \.(css|js|json|jpg|jpeg|webp|png|gif|svg|bmp|tiff|jfif|ico|sfw|woff|ttf|otf)$ - [E=SET_CACHE_HEADER:1]
-
-    RewriteCond %{QUERY_STRING} version=latest
-    RewriteRule \.(css|js|json|jpg|jpeg|webp|png|gif|svg|bmp|tiff|jfif|ico|sfw|woff|ttf|otf)$ - [E=NO_CACHE_HEADER:1]
 </IfModule>
 
 <IfModule mod_headers.c>
