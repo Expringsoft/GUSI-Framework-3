@@ -30,6 +30,11 @@ class Configuration
     public const APP_LANG_DISPLAY = "en";
 
     /**
+     * The session key to store app language.
+     */
+    public const APP_LANG_SESSION_KEY = "APP_CURRENT_LANGUAGE";
+
+    /**
      * The application timezone used by all date/time functions.
      * See supported list on: https://www.php.net/manual/en/timezones.php
      */

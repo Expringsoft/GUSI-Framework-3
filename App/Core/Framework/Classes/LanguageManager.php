@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Core\Framework\Classes;
 
+use App\Core\Application\Configuration;
 use JsonException;
 use App\Core\Server\Session;
 use App\Core\Exceptions\LangException;
@@ -41,8 +43,8 @@ class LanguageManager extends SingletonInstance
 	function __construct($language = null)
 	{
 		if ($language === null) {
-			if (Session::isset('language')) {
-				$language = Session::get('language');
+			if (Session::isset(Configuration::APP_LANG_SESSION_KEY)) {
+				$language = Session::get(Configuration::APP_LANG_SESSION_KEY);
 			} else {
 				$language = $this->detectLanguage();
 			}
@@ -59,7 +61,7 @@ class LanguageManager extends SingletonInstance
 	public function setLanguage($language)
 	{
 		$this->language = $language;
-		Session::set('language', $this->language);
+		Session::set(Configuration::APP_LANG_SESSION_KEY, $this->language);
 		$this->loadLanguageData($this->language);
 	}
 
@@ -93,6 +95,10 @@ class LanguageManager extends SingletonInstance
 	 */
 	private function loadDefaultLanguageData()
 	{
+		if ($this->defaultLanguageData !== null) {
+			return;
+		}
+
 		$filePath = "App/Langs/default.json";
 
 		if (!file_exists($filePath)) {
@@ -117,14 +123,19 @@ class LanguageManager extends SingletonInstance
 	{
 		if (isset($this->languageData[$key]) && !$this->usingDefaultLang) {
 			return $this->languageData[$key];
-		} elseif (isset($this->defaultLanguageData[$key])) {
-			if (!$this->usingDefaultLang) {
-				Logger::LogWarning(self::class, "The language key '{$key}' does not exist in lang file '{$this->language}.json'. Using default lang file.");
-			}
-			return $this->defaultLanguageData[$key];
 		} else {
-			Logger::LogWarning(self::class, "The language key '{$key}' does not exist in default lang file.");
-			return null;
+			if (!isset($this->defaultLanguageData)) {
+				$this->loadDefaultLanguageData();
+			}
+			if (isset($this->defaultLanguageData[$key])) {
+				if (!$this->usingDefaultLang) {
+					Logger::LogWarning(self::class, "The language key '{$key}' does not exist in lang file '{$this->language}.json'. Using default lang file.");
+				}
+				return $this->defaultLanguageData[$key];
+			} else {
+				Logger::LogWarning(self::class, "The language key '{$key}' does not exist in default lang file.");
+				return null;
+			}
 		}
 	}
 
