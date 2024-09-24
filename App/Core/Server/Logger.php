@@ -1,61 +1,115 @@
 <?php
+
 namespace App\Core\Server;
 
-class Logger{
+use Exception;
 
-    private const DATE_TIME = "d/m/Y - H:i:s";
-    private const DATE_FILE_NAME = "Y-m-d";
-    
+class Logger
+{
+    private const DATE_TIME_FORMAT = 'd/m/Y - H:i:s';
+    private const DATE_FILE_FORMAT = 'Y-m-d';
+    private const LOG_EXTENSION = '.log';
+
     private const DOUBLE_LINE = "\n\n";
-    private const LOG_SEPARATOR = " - ";
-    private const LOG_DESCRIPTOR = ": ";
+    private const LOG_SEPARATOR = ' - ';
+    private const LOG_DESCRIPTOR = ': ';
 
-    private const LOG_EXTENSION = ".log";
-
+    private const LOG_TYPE_ERROR = 'Errors';
+    private const LOG_TYPE_WARNING = 'Warnings';
+    private const LOG_TYPE_DEBUG = 'Debug';
 
     /**
      * Logs an error message to the error log file.
      *
-     * @param string $Logger The logger identifier.
-     * @param string $Message The error message to be logged.
+     * @param string|null $logger The logger identifier.
+     * @param mixed $message The error message to be logged.
+     * @param bool $prettyPrint Enables JSON pretty print for logging data
      * @return void
      */
-    public static function LogError($Logger, $Message)
+    public static function LogError(?string $logger, $message, bool $prettyPrint = false): void
     {
-        $FormatStart = date(self::DATE_TIME) . self::LOG_SEPARATOR . $Logger . self::LOG_DESCRIPTOR;
-        $Filename = date(self::DATE_FILE_NAME) . self::LOG_EXTENSION;
-        error_log($FormatStart . $Message . self::DOUBLE_LINE, 3, "App/Logs/Errors/" . $Filename);
+        self::writeLog(self::LOG_TYPE_ERROR, $logger, $message, $prettyPrint);
     }
 
-
     /**
-     * Logs a warning message to the specified logger.
+     * Logs a warning message to the warning log file.
      *
-     * @param string $Logger The name of the logger.
-     * @param string $Message The warning message to be logged.
+     * @param string|null $logger The logger identifier.
+     * @param mixed $message The warning message to be logged.
+     * @param bool $prettyPrint Enables JSON pretty print for logging data
      * @return void
      */
-    public static function LogWarning($Logger, $Message)
+    public static function LogWarning(?string $logger, $message, bool $prettyPrint = false): void
     {
-        $FormatStart = date(self::DATE_TIME) . self::LOG_SEPARATOR . $Logger . self::LOG_DESCRIPTOR;
-        $Filename = date(self::DATE_FILE_NAME) . self::LOG_EXTENSION;
-        error_log($FormatStart . $Message . self::DOUBLE_LINE, 3, "App/Logs/Warnings/" . $Filename);
+        self::writeLog(self::LOG_TYPE_WARNING, $logger, $message, $prettyPrint);
     }
 
     /**
      * Logs a debug message to the debug log file.
      *
-     * @param string $Logger The name of the logger.
-     * @param mixed $Message The message to be logged. If it is an array, it will be converted to a JSON string.
+     * @param string|null $logger The logger identifier.
+     * @param mixed $message The debug message to be logged.
+     * @param bool $prettyPrint Enables JSON pretty print for logging data
      * @return void
      */
-    public static function LogDebug($Logger, $Message)
+    public static function LogDebug(?string $logger, $message, bool $prettyPrint = false): void
     {
-        if (gettype($Message) == "array") {
-            $Message = json_encode($Message);
+        self::writeLog(self::LOG_TYPE_DEBUG, $logger, $message, $prettyPrint);
+    }
+
+    /**
+     * Writes a log message to the appropriate log file.
+     *
+     * @param string $type The type of log (Errors, Warnings, Debug).
+     * @param string|null $logger The logger identifier.
+     * @param mixed $message The message to be logged.
+     * @param bool $prettyPrint Enables JSON pretty print for logging data
+     * @return void
+     */
+    private static function writeLog(string $type, ?string $logger, $message, bool $prettyPrint): void
+    {
+        if ($logger === null) {
+            $e = new Exception();
+            $trace = $e->getTrace();
+            $logger = $trace[1]['file'] ?? 'Unknown';
         }
-        $FormatStart = date(self::DATE_TIME) . self::LOG_SEPARATOR . $Logger . self::LOG_DESCRIPTOR;
-        $Filename = date(self::DATE_FILE_NAME) . self::LOG_EXTENSION;
-        error_log($FormatStart . $Message . self::DOUBLE_LINE, 3, "App/Logs/Debug/" . $Filename);
+
+        if (!is_string($message)) {
+            $message = $prettyPrint ? ("\n" . json_encode($message, JSON_PRETTY_PRINT)) : json_encode($message);
+        }
+
+        $timestamp = date(self::DATE_TIME_FORMAT);
+        $logEntry = $timestamp . self::LOG_SEPARATOR . $logger . self::LOG_DESCRIPTOR . $message . self::DOUBLE_LINE;
+
+        $directory = sprintf('App/Logs/%s', $type);
+        $filename = sprintf('%s/%s%s', $directory, date(self::DATE_FILE_FORMAT), self::LOG_EXTENSION);
+
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        file_put_contents($filename, $logEntry, FILE_APPEND | LOCK_EX);
+    }
+
+    /**
+     * Generates a call trace as a string.
+     *
+     * @return string The call trace.
+     */
+    public static function generateCallTraceString(): string
+    {
+        $e = new Exception();
+        return $e->getTraceAsString();
+    }
+
+    /**
+     * Generates a call trace array.
+     *
+     * @return array The call trace.
+     */
+    public static function generateCallTraceArray(): array
+    {
+        $e = new Exception();
+        return $e->getTrace();
     }
 }
