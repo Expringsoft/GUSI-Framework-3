@@ -5,7 +5,6 @@ namespace App\Core\Server;
 use App\Core\Application\Configuration;
 use App\Core\Framework\Abstracts\SingletonInstance;
 use InvalidArgumentException;
-use PSpell\Config;
 
 /**
  * Class Router
@@ -17,6 +16,8 @@ class Router extends SingletonInstance
 	protected $baseUrl;
 
 	protected $routes = array();
+
+	protected $compiledRoutes = array();
 
 	protected $parameters = ['GET' => array(), 'POST' => array(), 'PATH_SEGMENTS' => array()];
 
@@ -49,7 +50,7 @@ class Router extends SingletonInstance
 	 * 
 	 * @return $this
 	 */
-	public function addRoute($route, $controller)
+	public function addRoute(string $route, string|array $controller)
 	{
 		if (isset($this->routes[$route])) {
 			Logger::LogWarning(self::class, "Route '{$route}' has been overwritten.");
@@ -63,8 +64,59 @@ class Router extends SingletonInstance
 			throw new InvalidArgumentException("The controller must be a string or an array with one or two elements: the controller name and the method.");
 		}
 
+		// Route is compiled into a regex pattern
+		$regex = $this->compileRoute($route);
+
+		// Store the compiled route
+		$this->compiledRoutes[] = [
+			'regex' => $regex,
+			'controller' => $controller,
+		];
+
+		// Optionally, keep the original route if needed
 		$this->routes[$route] = $controller;
+
 		return $this;
+	}
+
+	/**
+	 * Compiles a route pattern into a regex.
+	 *
+	 * @param string $route The route pattern.
+	 * @return string The compiled regex pattern.
+	 */
+	private function compileRoute(string $route)
+	{
+		// Special case for the root route '/' (direct request, eg. https://yoursite.com/).
+		if ($route === '/') {
+			return '#^/$#';
+		}
+
+		$regex = '';
+
+		$routeSegments = explode('/', $route);
+
+		foreach ($routeSegments as $segment) {
+			if ($segment === '') continue; // Skip empty segments
+			$regex .= '/'; // Add leading '/'
+			if (preg_match('/^\{\@(.+)\}$/', $segment, $matches)) {
+				// Wildcard parameter, match the rest of the URI
+				$paramName = $matches[1];
+				$regex .= '(?P<' . $paramName . '>.*)';
+				break; // Wildcard captures rest, so we can stop processing segments
+			} elseif (preg_match('/^\{(.+)\}$/', $segment, $matches)) {
+				// Normal parameter
+				$paramName = $matches[1];
+				$regex .= '(?P<' . $paramName . '>[^/]+)';
+			} else {
+				// Literal segment
+				$regex .= preg_quote($segment, '/');
+			}
+		}
+
+		$regex = '#^' . $regex . '$#';
+
+		return $regex;
 	}
 
 	/**
@@ -78,168 +130,11 @@ class Router extends SingletonInstance
 	public function setBaseUrl()
 	{
 		$Protocol = self::isContextSecure() ? "https://" : "http://";
-		if(Configuration::LOCAL_ENVIRONMENT){
+		if (Configuration::LOCAL_ENVIRONMENT) {
 			$this->baseUrl = $Protocol . $_SERVER['SERVER_NAME'] . Configuration::PATH_URL;
 		} else {
 			$this->baseUrl = $Protocol . Configuration::APP_DOMAIN;
 		}
-	}
-
-	/**
-	 * Obtains the operating system from the user agent.
-	 *
-	 * @param string|null $UserAgent The user agent string to parse. If null, the user agent from the request will be used.
-	 * @return string The operating system from the user agent. Unknown if not found.
-	 */
-	public static function getOSFromUserAgent(string $UserAgent = null)
-	{
-		$os = "Unknown";
-
-		if ($UserAgent === null) {
-			$UserAgent = $_SERVER['HTTP_USER_AGENT'] ?? $os;
-		}
-
-		$os_array = array(
-			// Bots
-			'/googlebot-mobile/i'       => 'Googlebot Mobile',
-			'/googlebot/i'              => 'Googlebot',
-			'/bingbot/i'                => 'Bingbot',
-			'/msnbot/i'                 => 'MSNbot',
-			'/grapeshotcrawler/i'       => 'Grapeshot Crawler Bot',
-			'/yandexbot/i'              => 'Yandexbot',
-			'/baiduspider/i'            => 'Baiduspider Bot',
-			'/duckduckbot/i'            => 'DuckDuckGo Bot',
-			'/duckassistbot/i'          => 'DuckAssistBot',
-			'/facebookexternalhit/i'    => 'Facebook Bot (External Hit)',
-			'/facebookbot/i'            => 'Facebook Bot',
-			'/telegrambot/i'            => 'Telegram Bot',
-			'/twitterbot/i'             => 'Twitter Bot',
-			'/discordbot/i'             => 'Discord Bot',
-			'/linkedinbot/i'            => 'LinkedIn Bot',
-			'/pinterestbot/i'           => 'Pinterest Bot',
-			'/slackbot/i'               => 'Slack Bot',
-			'/applebot/i'               => 'Apple Bot',
-			'/yahoo! slurp/i'           => 'Yahoo! Slurp Bot',
-			'/ia_archiver/i'            => 'Alexa Bot',
-			'/archive.org_bot/i'        => 'Archive.org Bot',
-			// Windows
-			'/windows nt 10/i'          => 'Windows 10',
-			'/windows nt 6.3/i'         => 'Windows 8.1',
-			'/windows nt 6.2/i'         => 'Windows 8',
-			'/windows nt 6.1/i'         => 'Windows 7',
-			'/windows nt 6.0/i'         => 'Windows Vista',
-			'/windows nt 5.2/i'         => 'Windows Server 2003/XP x64',
-			'/windows nt 5.1/i'         => 'Windows XP',
-			'/windows xp/i'             => 'Windows XP',
-			'/windows nt 5.0/i'         => 'Windows 2000',
-			'/windows me/i'             => 'Windows ME',
-			'/win98/i'                  => 'Windows 98',
-			'/win95/i'                  => 'Windows 95',
-			'/win16/i'                  => 'Windows 3.11',
-			'/windows phone(?: ([0-9.,_]+))?/i' => 'Windows Phone$1',
-			// Apple
-			'/iphone(?: ([0-9.,_]+))?/i' => 'iPhone$1',
-			'/ipad/i'                   => 'iPad',
-			'/ipod/i'                   => 'iPod',
-			'/macintosh|mac os x 10_15/i' => 'macOS Catalina',
-			'/mac os x 10_16|mac os x 11/i' => 'macOS Big Sur',
-			'/mac os x 12/i'            => 'macOS Monterey',
-			'/mac os x 13/i'            => 'macOS Ventura',
-			'/macintosh|mac os x/i'     => 'Mac OS X',
-			'/mac_powerpc/i'            => 'Mac OS 9',
-			// Android and Chrome OS
-			'/android(?: ([0-9.]+))?/i' => 'Android$1',
-			'/cros x86_64/i'            => 'Chrome OS x64',
-			'/cros armv7l/i'            => 'Chrome OS ARM',
-			'/cros aarch64/i'           => 'Chrome OS ARM64',
-			// Linux and other Unix-like OS
-			'/ubuntu/i'                 => 'Ubuntu',
-			'/freebsd/i'                => 'FreeBSD',
-			'/linux/i'                  => 'Linux',
-			'/debian/i'                 => 'Debian',
-			'/centos/i'                 => 'CentOS',
-			'/fedora/i'                 => 'Fedora',
-			'/blackberry/i'             => 'BlackBerry',
-			'/webos/i'                  => 'Mobile',
-			// Others
-			'/adobeair/i'               => 'Adobe AIR'
-		);
-
-		foreach ($os_array as $regex => $value) {
-			if (preg_match($regex, $UserAgent, $matches)) {
-				$os = str_replace('$1', isset($matches[1]) ? ' ' . $matches[1] : '', $value);
-				break;
-			}
-		}
-
-		// Especificar Windows 11 si se detecta a través del User-Agent Client Hints
-		if ($os == "Windows 10" && isset($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'])) {
-			if (version_compare($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'], "13", ">=")) {
-				$os = "Windows 11";
-			}
-		}
-
-		return $os;
-	}
-
-	/**
-	 * Obtains the browser from the user agent.
-	 *
-	 * @param string|null $UserAgent The user agent string to parse. If null, the user agent from the request will be used.
-	 * @return string The browser from the user agent. Unknown if not found.
-	 */
-	public static function getBrowserFromUserAgent(string $UserAgent = null)
-	{
-		if ($UserAgent === null) {
-			$UserAgent = $_SERVER['HTTP_USER_AGENT'] ?? "Unknown";
-		}
-		$browser = "Unknown";
-
-		$browser_array = array(
-			'/postmanruntime/i'     => 'Postman API Platform',
-			'/trident\/7.0/i'       => 'Internet Explorer 11',
-			'/trident\/6.0/i'       => 'Internet Explorer 10',
-			'/trident\/5.0/i'       => 'Internet Explorer 9',
-			'/trident\/4.0/i'       => 'Internet Explorer 8',
-			'/trident/i'            => 'Internet Explorer',
-			'/msie/i'               => 'Internet Explorer',
-			'/duckduckgo/i'         => 'DuckDuckGo',
-			'/edg/i'                => 'Microsoft Edge',
-			'/msedge/i'             => 'Microsoft Edge',
-			'/firefox/i'            => 'Mozilla Firefox',
-			'/opr\/gx/i'            => 'Opera GX',
-			'/opr/i'                => 'Opera',
-			'/opera/i'              => 'Opera',
-			'/origin/i'             => 'EA Origin',
-			'/netscape/i'           => 'Netscape',
-			'/maxthon/i'            => 'Maxthon',
-			'/konqueror/i'          => 'Konqueror',
-			'/brave/i'              => 'Brave',
-			'/vivaldi/i'            => 'Vivaldi',
-			'/yabrowser/i'          => 'Yandex',
-			'/yowser/i'             => 'Yandex',
-			'/samsungbrowser/i'     => 'Samsung Internet',
-			'/epic/i'               => 'Epic',
-			'/ucbrowser/i'          => 'UC Browser',
-			'/qqbrowser/i'          => 'QQ Browser',
-			'/baidubrowser/i'       => 'Baidu Browser',
-			'/palemoon/i'           => 'Pale Moon',
-			'/waterfox/i'           => 'Waterfox',
-			'/torbrowser/i'         => 'Tor Browser',
-			'/chromium/i'           => 'Chromium',
-			'/chrome/i'             => 'Chrome',
-			'/safari/i'             => 'Safari',
-			'/mobile/i'             => 'Mobile Device',
-		);
-
-		foreach ($browser_array as $regex => $value) {
-			if (preg_match($regex, $UserAgent)) {
-				$browser = $value;
-				break;
-			}
-		}
-
-		return $browser;
 	}
 
 	/**
@@ -383,19 +278,7 @@ class Router extends SingletonInstance
 	 */
 	public function getRequestUri()
 	{
-		if (!isset($_SERVER['REQUEST_URI'])) {
-			return '';
-		}
-		$uri = $_SERVER['REQUEST_URI'];
-		// TODO: Improve this temporary code to avoid situations of // or //// or more
-		// at the beginning and end of the URL.
-		if (strpos($uri, '/') === 0) {
-			$uri = substr($uri, 1);
-		}
-		if (strrpos($uri, '/') === (strlen($uri) - 1)) {
-			$uri = substr($uri, 0, -1);
-		}
-		return $uri;
+		return $_SERVER['REQUEST_URI'] ?? '';
 	}
 
 	/**
@@ -405,16 +288,14 @@ class Router extends SingletonInstance
 	 */
 	public function createRequest()
 	{
-		// Store the request URI
 		$uri = $this->getRequestUri();
-		// Initial item in the URI parts array is /
-		$uriParts = ["/"];
-		// Split the URI into parts
-		$uriPath = explode('/', $uri);
-		// The root path / is lost when splitting the URI; add it back if the first part is not empty
-		if ($uriPath[0] != "") {
-			$uriParts = array_merge($uriParts, $uriPath);
-		}
+		$uriPath = parse_url($uri, PHP_URL_PATH);
+
+		// Remove leading and trailing slashes
+		$uriPath = trim($uriPath, '/');
+
+		// Store URI path segments
+		$this->parameters['PATH_SEGMENTS'] = $uriPath === '' ? [] : explode('/', $uriPath);
 
 		// Retrieve data received via JSON (e.g., in POST requests)
 		$jsonData = json_decode(file_get_contents("php://input"), true);
@@ -432,20 +313,13 @@ class Router extends SingletonInstance
 		// Merge JSON data and POST data
 		$this->parameters['POST'] = array_merge($_POST, $jsonData);
 
-		// Add query parameters to the GET parameters array
+		// Parse query string into GET parameters
 		$queryString = parse_url($uri, PHP_URL_QUERY);
 		if ($queryString) {
 			parse_str($queryString, $queryParams);
-			foreach ($queryParams as $key => $value) {
-				$this->parameters['GET'][$key] = $value;
-			}
-		}
-
-		// Store URI path segments without query parameters
-		$this->parameters['PATH_SEGMENTS'] = [];
-		foreach ($uriParts as $part) {
-			$value = explode('?', $part)[0]; // Retrieve the value before '?'
-			$this->parameters['PATH_SEGMENTS'][] = $value;
+			$this->parameters['GET'] = $queryParams;
+		} else {
+			$this->parameters['GET'] = [];
 		}
 
 		return $this;
@@ -458,42 +332,28 @@ class Router extends SingletonInstance
 	 */
 	public function handleRequest()
 	{
-		// Iterate through Module-defined routes
-		foreach ($this->routes as $route => $controllerAndMethod) {
-			// Split Module-defined paths by / to compare each segment with the requested route segments
-			$routeParts = explode('/', $route);
-			// The first part of the route is always /
-			$routeParts[0] = "/";
-			// Set the route segments to / if the route is /, otherwise use the route parts
-			$routeSegments = $route === "/" ? ["/"] : $routeParts;
+		$requestUri = $this->getRequestUri();
+		$uriPath = parse_url($requestUri, PHP_URL_PATH);
 
-			// Continue to the next route if the number of segments in the requested route 
-			// does not match the number of segments in the route
-			if (count($routeSegments) != count($this->parameters['PATH_SEGMENTS'])) {
-				continue;
-			}
+		// Remove trailing slashes but keep leading slash
+		$uriPath = '/' . trim($uriPath, '/');
 
-			// Initialize the parameters array
-			$parameters = [];
-			// Iterate through the route segments
-			for ($i = 0; $i < count($routeSegments); $i++) {
-				// Check if the segment is initialized before accessing it
-				if (!isset($routeSegments[$i][0]) || !isset($routeSegments[$i][-1])) {
-					continue 2; // Skip to the next route if the segment is not initialized
+		foreach ($this->compiledRoutes as $route) {
+			$regex = $route['regex'];
+			$controllerAndMethod = $route['controller'];
+
+			if (preg_match($regex, $uriPath, $matches)) {
+				$parameters = [];
+				foreach ($matches as $key => $value) {
+					if (!is_int($key)) {
+						$parameters[$key] = $value;
+					}
 				}
-				// Add to the parameters array if the route segment is a parameter defined by param name enclosed with {}
-				if ($routeSegments[$i][0] == '{' && $routeSegments[$i][-1] == '}') {
-					$parameters[trim($routeSegments[$i], '{}')] = $this->parameters['PATH_SEGMENTS'][$i];
-				} elseif ($routeSegments[$i] != $this->parameters['PATH_SEGMENTS'][$i]) {
-					// Continue to the next route if the route segment does not match the requested route segment
-					continue 2;
-				}
-			}
 
-			// At this point, the route matches the requested route; create a new instance of 
-			// the controller and call the method with the parameters array, 0 is the controller class and 1 is the method.
-			$controller = new $controllerAndMethod[0]($controllerAndMethod[1], $parameters);
-			return;
+				// Instantiate the controller with the method and parameters
+				$controller = new $controllerAndMethod[0]($controllerAndMethod[1], $parameters);
+				return;
+			}
 		}
 
 		// Render a 404 page if no route matches the requested route
@@ -508,8 +368,6 @@ class Router extends SingletonInstance
 	public function generateRoutermap()
 	{
 		$groupedRoutes = [];
-
-		// Agrupar rutas por controlador
 		foreach ($this->routes as $route => $controller) {
 			$controllerName = $controller[0];
 			$methodName = $controller[1];
@@ -518,8 +376,6 @@ class Router extends SingletonInstance
 			}
 			$groupedRoutes[$controllerName][] = ['route' => $route, 'method' => $methodName];
 		}
-
-		// Generar contenido YAML
 		$yamlContent = "Routermap:\n\n";
 		foreach ($groupedRoutes as $controller => $routes) {
 			$yamlContent .= "  {$controller}:\n";
@@ -527,11 +383,7 @@ class Router extends SingletonInstance
 				$yamlContent .= "    - route: {$routeInfo['route']} # {$routeInfo['method']}\n";
 			}
 		}
-
-		// Create the file name
 		$fileName = 'routermap_' . time() . '.yaml';
-
-		// Write the YAML content to the file
 		file_put_contents($fileName, $yamlContent);
 	}
 }

@@ -3,6 +3,8 @@ namespace App\Controllers\Index;
 
 use App\Core\Framework\Abstracts\Controller;
 use App\Core\Framework\Enumerables\Channels;
+use App\Core\Server\Logger;
+use App\Core\Server\UAParser;
 use App\Modules\Index\Index_Module;
 
 class Home extends Controller
@@ -10,6 +12,7 @@ class Home extends Controller
 	public function Main(...$args)
 	{
 		// Set the view
+		Logger::LogDebug(null, "[WATCHER] UA:" . UAParser::getOSFromUserAgent() . ' with ' . UAParser::getBrowserFromUserAgent());
 		$this->setView('Default/Home.php');
 	}
 

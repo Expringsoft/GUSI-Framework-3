@@ -11,7 +11,7 @@ use App\Core\Exceptions\ViewException;
 use LogicException;
 use InvalidArgumentException;
 use App\Core\Server\Logger;
-use App\Core\Framework\Classes\ResourceManager;
+use App\Core\Server\Router;
 
 class Actions
 {
@@ -103,19 +103,18 @@ class Actions
 
 	public static function printScript($fileName)
 	{
-		$fileName = ResourceManager::base_64_url_encode('Scripts/' . $fileName);
+		$fileName = 'Scripts/' . $fileName;
 		return Router::getInstance()->getBaseUrl() . 'public/' . Configuration::APP_VERSION . '/' . $fileName;
 	}
 
 	public static function printCSS($fileName)
 	{
-		$fileName = ResourceManager::base_64_url_encode('Styles/' . $fileName);
+		$fileName = 'Styles/' . $fileName;
 		return Router::getInstance()->getBaseUrl() . 'public/' . Configuration::APP_VERSION . '/' . $fileName;
 	}
 
 	public static function printResource($Route)
 	{
-		$Route = ResourceManager::base_64_url_encode($Route);
 		return Router::getInstance()->getBaseUrl() . 'public/' . Configuration::APP_VERSION . '/' . $Route;
 	}
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Core\Framework\Classes;
 
 use App\Core\Application\Configuration;
@@ -11,32 +12,43 @@ use App\Core\Server\Logger;
 /**
  * The ResourceManager class provides methods for loading and managing resources.
  */
-class ResourceManager {
+class ResourceManager
+{
+	public const CACHE_TIME_ONE_YEAR = 31536000;
+	public const CACHE_TIME_ONE_DAY = 86400;
+	public const CACHE_TIME_ONE_WEEK = 604800;
+	public const CACHE_TIME_ONE_MONTH = 2629800;
 
-	public function __construct($Method, $args = []) {
+	public const STORE_TYPE_SHORT = 'store-short';
+	public const STORE_TYPE_MEDIUM = 'store-medium';
+	public const STORE_TYPE_LONG = 'store-long';
+
+	public function __construct($Method, $args = [])
+	{
 		if (!isset($args['version']) || !isset($args['resource'])) {
 			http_response_code(SharedConsts::HTTP_RESPONSE_BAD_REQUEST);
 			echo "Bad Request";
 			return;
 		}
-		if ($args['version'] != Configuration::APP_VERSION) {
+		if (!in_array($args['version'], [Configuration::APP_VERSION, self::STORE_TYPE_SHORT, self::STORE_TYPE_MEDIUM])) {
 			http_response_code(SharedConsts::HTTP_RESPONSE_NOT_FOUND);
 			echo Actions::printLocalized(Strings::RESOURCE_NOT_FOUND);
 			return;
 		} else {
 			$Resource = $args['resource'];
-			$Resource = self::base_64_url_decode($Resource, true);
-			if ($Resource === false) {
-				http_response_code(SharedConsts::HTTP_RESPONSE_BAD_REQUEST);
-				echo "Bad Request";;
-				return;
-			}
 			if (strpos($Resource, '..') !== false || strpos($Resource, '/') === 0) {
 				http_response_code(SharedConsts::HTTP_RESPONSE_FORBIDDEN);
 				echo Actions::printLocalized(Strings::FORBIDDEN);
 				return;
 			}
-			self::loadResource($Resource);
+			$time = self::CACHE_TIME_ONE_YEAR;
+			match ($args['version']) {
+				self::STORE_TYPE_SHORT => $time = self::CACHE_TIME_ONE_DAY,
+				self::STORE_TYPE_MEDIUM => $time = self::CACHE_TIME_ONE_WEEK,
+				self::STORE_TYPE_LONG => $time = self::CACHE_TIME_ONE_MONTH,
+				default => $time = self::CACHE_TIME_ONE_YEAR
+			};
+			self::loadResource($Resource, $time);
 		}
 	}
 
@@ -46,7 +58,7 @@ class ResourceManager {
 	 * @param string $path The path to the resource file.
 	 * @return string The contents of the resource file.
 	 */
-	public static function loadResource(string $path)
+	public static function loadResource(string $path, int $cacheTime)
 	{
 		$safePath = str_replace(['..', '\\', '/./', '/../'], '', $path);
 		$safePath = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $safePath);
@@ -132,22 +144,12 @@ class ResourceManager {
 		}
 		header('Content-Type: ' . $mimeType);
 		header('Content-Length: ' . filesize($safePath));
-		header('Cache-Control: public, max-age=' . Configuration::RESOURCE_CACHE_TIME);
-		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + Configuration::RESOURCE_CACHE_TIME) . ' GMT');
+		header('Cache-Control: public, max-age=' . $cacheTime);
+		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cacheTime) . ' GMT');
 		header('Pragma: public');
 		header('Fetch-As: ' . $extension);
-		header('GF-Name: ' . pathinfo($safePath, PATHINFO_BASENAME));
-		header('X-Content-Type-Options: nosniff');
 		header('X-Frame-Options: DENY');
 		header('X-XSS-Protection: 1; mode=block');
 		readfile($safePath);
-	}
-
-	public static function base_64_url_encode($input) {
-		return strtr(base64_encode($input), '+/=', '-_,');
-	}
-
-	public static function base_64_url_decode($input) {
-		return base64_decode(strtr($input, '-_,', '+/='));
 	}
 }
